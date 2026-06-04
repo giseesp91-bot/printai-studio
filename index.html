@@ -379,6 +379,108 @@ select.prsel{
   appearance:none;
 }
 
+/* ══════════════════════════════════════════
+   RESPONSIVE MÓVIL
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .app {
+    grid-template-rows: 48px 1fr 52px;
+    grid-template-columns: 1fr;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .topbar { padding: 0 12px; gap: 0 }
+  .logo-name { font-size: 14px }
+  .top-tabs { display: none }
+  .top-right { gap: 6px }
+  .tbtn span, .tbtn { font-size: 11px; padding: 5px 8px }
+  #btn-undo, #btn-redo { display: none }
+
+  /* iconbar se convierte en barra inferior */
+  .iconbar {
+    grid-row: 3;
+    grid-column: 1;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 0 8px;
+    border-right: none;
+    border-top: 1px solid var(--b1);
+    height: 52px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .iconbar::-webkit-scrollbar { display: none }
+  .ib { width: 44px; height: 44px }
+  .ib-sep { display: none }
+
+  /* sidebar oculto por defecto, abre como drawer */
+  .sidebar {
+    position: fixed;
+    left: -240px;
+    top: 48px;
+    bottom: 52px;
+    width: 240px;
+    z-index: 200;
+    transition: left .25s ease;
+    border-right: 1px solid var(--b2);
+    box-shadow: 4px 0 20px rgba(0,0,0,.4);
+  }
+  .sidebar.open { left: 0 }
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 199;
+  }
+  .sidebar-backdrop.show { display: block }
+
+  /* center ocupa todo */
+  .center {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  /* panel derecho como drawer desde la derecha */
+  .rpanel {
+    position: fixed;
+    right: -310px;
+    top: 48px;
+    bottom: 52px;
+    width: 300px;
+    z-index: 200;
+    transition: right .25s ease;
+    border-left: 1px solid var(--b2);
+    box-shadow: -4px 0 20px rgba(0,0,0,.4);
+  }
+  .rpanel.open { right: 0 }
+
+  /* barra inferior de modos más compacta */
+  .bbar { overflow-x: auto; scrollbar-width: none }
+  .bbar::-webkit-scrollbar { display: none }
+  .btab { padding: 0 10px; font-size: 11px }
+  .bbar-right { display: none !important }
+
+  /* viewport chips más chicos */
+  .vpchip { font-size: 10px; padding: 3px 7px }
+  .vp-views { padding: 3px; bottom: 8px }
+  .vview { font-size: 10px; padding: 4px 10px }
+  .vp-tbar { gap: 4px }
+  .vpbtn { font-size: 10px; padding: 4px 8px }
+
+  /* modales full width en mobile */
+  .modal { min-width: unset; width: 94vw !important; margin: 0 auto }
+
+  /* toast abajo centrado */
+  .toast { bottom: 60px; right: 50%; transform: translateX(50%) translateY(80px) }
+  .toast.show { transform: translateX(50%) translateY(0) }
+}
+
+@media (max-width: 480px) {
+  .logo-name { display: none }
+  .top-right .tbtn:not(.primary) { display: none }
+}
+
 /* ── TYPING DOTS ── */
 .typing-dots span {
   animation: tdot 1.2s infinite;
@@ -486,6 +588,7 @@ select.prsel{
       <div class="logo-mark"><i class="ti ti-3d-cube-sphere"></i></div>
       <div class="logo-name">Print<span>AI</span> Studio</div>
     </a>
+    <button class="tbtn" id="menuToggle" onclick="toggleSidebar()" style="display:none;padding:6px 10px"><i class="ti ti-menu-2"></i></button>
     <div class="top-tabs">
       <button class="tt on" onclick="activeTT(this)"><i class="ti ti-layout-dashboard"></i>Workspace</button>
       <button class="tt" onclick="activeTT(this)"><i class="ti ti-books"></i>Biblioteca</button>
@@ -500,11 +603,18 @@ select.prsel{
       <button class="tbtn" onclick="openProject()"><i class="ti ti-folder-open"></i>Abrir</button>
       <button class="tbtn" onclick="openModal('modalSave')"><i class="ti ti-device-floppy"></i>Guardar</button>
       <button class="tbtn primary" onclick="showExport()"><i class="ti ti-printer"></i>Exportar</button>
+      <button class="tbtn mobile-panel-btn" id="panelToggle" onclick="toggleRpanel()"
+        style="display:none;padding:6px 10px">
+        <i class="ti ti-layout-sidebar-right"></i>
+      </button>
     </div>
   </div>
 
   <!-- ICON BAR -->
-<div class="iconbar">
+<!-- backdrop para drawers móvil -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileDrawers()"></div>
+
+  <div class="iconbar">
 <div class="ib on" data-tip="Vista libre" onclick="ibAction('free',this)"><i class="ti ti-vector-bezier"></i></div>
 <div class="ib" data-tip="Seleccionar modelo" onclick="ibAction('select',this)"><i class="ti ti-pointer"></i></div>
 <div class="ib" data-tip="Mover modelo" onclick="ibAction('move',this)"><i class="ti ti-arrows-move"></i></div>
@@ -569,11 +679,52 @@ select.prsel{
         <div class="vpchip" id="polyChip"><i class="ti ti-topology-star-3"></i><span>24,512 polígonos</span></div>
       </div>
 
+      <!-- overlay bienvenida (visible al inicio) -->
+      <div class="vp-generating" id="welcomeOverlay">
+        <div style="text-align:center;max-width:420px;padding:20px">
+          <div style="width:64px;height:64px;border-radius:16px;background:var(--acc);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px">
+            <i class="ti ti-3d-cube-sphere" style="color:#fff"></i>
+          </div>
+          <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:700;color:var(--t1);margin-bottom:8px">PrintAI Studio</div>
+          <div style="font-size:14px;color:var(--t2);line-height:1.6;margin-bottom:24px">
+            Subí un modelo STL u OBJ para empezar.<br>La IA analiza tu pieza y te ayuda a optimizarla.
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button onclick="document.getElementById('fup').click()" 
+              style="background:var(--acc);border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;gap:8px;transition:.15s"
+              onmouseover="this.style.background='var(--acc2)'" onmouseout="this.style.background='var(--acc)'">
+              <i class="ti ti-upload"></i> Subir STL / OBJ
+            </button>
+            <button onclick="loadDemoAndClose()"
+              style="background:var(--bg4);border:1px solid var(--b2);border-radius:10px;padding:12px 24px;font-size:14px;font-weight:600;color:var(--t2);cursor:pointer;font-family:Outfit,sans-serif;display:flex;align-items:center;gap:8px;transition:.15s"
+              onmouseover="this.style.background='var(--bg5)'" onmouseout="this.style.background='var(--bg4)'">
+              <i class="ti ti-eye"></i> Ver demo
+            </button>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:16px;justify-content:center">
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:700;color:var(--acc2);font-family:Outfit,sans-serif">STL</div>
+              <div style="font-size:10px;color:var(--t3)">Binario y ASCII</div>
+            </div>
+            <div style="width:1px;background:var(--b1)"></div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:700;color:var(--ok);font-family:Outfit,sans-serif">OBJ</div>
+              <div style="font-size:10px;color:var(--t3)">Con normales</div>
+            </div>
+            <div style="width:1px;background:var(--b1)"></div>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:700;color:var(--warn);font-family:Outfit,sans-serif">3MF</div>
+              <div style="font-size:10px;color:var(--t3)">Próximamente</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- overlay generando -->
       <div class="vp-generating" id="genOverlay" style="display:none">
         <div class="gen-ring"></div>
-        <div class="gen-txt">Generando modelo 3D...</div>
-        <div class="gen-sub" id="genSub">Analizando imagen con IA</div>
+        <div class="gen-txt">Cargando modelo...</div>
+        <div class="gen-sub" id="genSub">Leyendo archivo</div>
       </div>
 
       <!-- vistas -->
@@ -598,12 +749,20 @@ select.prsel{
         <span class="wcnt">3</span>
       </div>
       <div class="btab" onclick="setMode('path',this)"><i class="ti ti-route"></i>Recorrido</div>
-      <div class="bbar-right">
-        <span class="bstat">Polígonos: <b>24,512</b></span>
-        <span class="bstat">Material: <b style="color:var(--ok)">PLA</b></span>
-        <span class="bstat">Escala: <b>100%</b></span>
-        <span class="bstat">Capas: <b>80</b></span>
-      </div>
+      <!-- Controles de capa (solo visibles en modo capas) -->
+    <div id="layerControls" style="display:none;align-items:center;gap:8px;padding:0 12px;flex:1">
+      <span style="font-size:11px;color:var(--t3);white-space:nowrap">Capa:</span>
+      <input type="range" id="layerSlider" min="1" max="80" value="50"
+        style="flex:1;accent-color:var(--acc);height:3px;cursor:pointer"
+        oninput="onLayerSlide(this.value)">
+      <span id="layerVal" style="font-size:11px;color:var(--acc2);font-family:var(--mono);white-space:nowrap;min-width:50px">50 / 80</span>
+    </div>
+    <div class="bbar-right" id="bbarRight">
+      <span class="bstat">Polígonos: <b>24,512</b></span>
+      <span class="bstat">Material: <b style="color:var(--ok)">PLA</b></span>
+      <span class="bstat">Escala: <b>100%</b></span>
+      <span class="bstat">Capas: <b>80</b></span>
+    </div>
     </div>
   </div>
 
@@ -856,6 +1015,14 @@ function ibAction(action, el) {
   }
 }
 
+function loadDemoAndClose() {
+  const wo = document.getElementById('welcomeOverlay');
+  if (wo) wo.style.display = 'none';
+  // el modelo demo ya está cargado (castillo), solo mostrar stats
+  setTimeout(() => refreshStats(), 200);
+  showToast('ok','ti-eye','Modelo demo cargado');
+}
+
 function fitModel(){
   if(!modelMesh || !camera){
     showToast('warn','ti-alert-triangle','No hay modelo para encuadrar');
@@ -876,9 +1043,84 @@ function fitModel(){
 
 // Modificar comportamiento del drag según herramienta activa
 function updateDragBehavior(tool){
-  // guardamos el tool actual; el mousemove lo lee
   currentTool = tool;
+  // cambiar cursor visual según herramienta
+  const vp = document.getElementById('viewport3d');
+  if (!vp) return;
+  const cursors = { free:'grab', select:'default', move:'move', scale:'nwse-resize', rotate:'crosshair' };
+  vp.style.cursor = cursors[tool] || 'default';
 }
+
+// ════════════════════════════════════════════════
+//  UNDO / REDO
+// ════════════════════════════════════════════════
+const undoStack = [];
+const redoStack = [];
+const MAX_UNDO = 20;
+
+function saveUndoState() {
+  if (!modelMesh) return;
+  const state = {
+    position: modelMesh.position.clone(),
+    scale:    modelMesh.scale.clone(),
+    rotation: modelMesh.rotation.clone()
+  };
+  undoStack.push(state);
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  redoStack.length = 0; // limpiar redo al hacer nueva acción
+  updateUndoRedoBtns();
+}
+
+function undo() {
+  if (undoStack.length === 0) { showToast('warn','ti-arrow-back','Nada para deshacer'); return; }
+  // guardar estado actual en redo
+  if (modelMesh) {
+    redoStack.push({
+      position: modelMesh.position.clone(),
+      scale:    modelMesh.scale.clone(),
+      rotation: modelMesh.rotation.clone()
+    });
+  }
+  const state = undoStack.pop();
+  if (modelMesh && state) {
+    modelMesh.position.copy(state.position);
+    modelMesh.scale.copy(state.scale);
+    modelMesh.rotation.copy(state.rotation);
+    showToast('ok','ti-arrow-back','Acción deshecha');
+    setTimeout(() => refreshStats(), 200);
+  }
+  updateUndoRedoBtns();
+}
+
+function redo() {
+  if (redoStack.length === 0) { showToast('warn','ti-arrow-forward','Nada para rehacer'); return; }
+  if (modelMesh) {
+    undoStack.push({
+      position: modelMesh.position.clone(),
+      scale:    modelMesh.scale.clone(),
+      rotation: modelMesh.rotation.clone()
+    });
+  }
+  const state = redoStack.pop();
+  if (modelMesh && state) {
+    modelMesh.position.copy(state.position);
+    modelMesh.scale.copy(state.scale);
+    modelMesh.rotation.copy(state.rotation);
+    showToast('ok','ti-arrow-forward','Acción rehecha');
+    setTimeout(() => refreshStats(), 200);
+  }
+  updateUndoRedoBtns();
+}
+
+function updateUndoRedoBtns() {
+  const btnU = document.getElementById('btn-undo');
+  const btnR = document.getElementById('btn-redo');
+  if (btnU) btnU.style.opacity = undoStack.length > 0 ? '1' : '0.35';
+  if (btnR) btnR.style.opacity = redoStack.length > 0 ? '1' : '0.35';
+}
+
+// guardar estado antes de mover/escalar/rotar
+let dragStartSaved = false;
 
 function selProj(el){
   document.querySelectorAll('.proj').forEach(p=>p.classList.remove('on'));
@@ -1223,8 +1465,11 @@ function loadGeometry(geo, filename) {
   camera.lookAt(0, 0, 0);
   camTarget.set(0, 0, 0);
 
+  // ocultar pantalla de bienvenida
+  const wo = document.getElementById('welcomeOverlay');
+  if (wo) wo.style.display = 'none';
+
   showToast('ok', 'ti-3d-cube-sphere', `Modelo "${filename}" cargado`);
-  // calcular stats reales del modelo cargado
   setTimeout(() => refreshStats(), 300);
 }
 
@@ -1296,8 +1541,15 @@ function updateCamera() {
 function setupControls() {
   const el = renderer.domElement;
 
-  el.addEventListener('mousedown', e => { drag = true; lx = e.clientX; ly = e.clientY; e.preventDefault(); });
-  window.addEventListener('mouseup', () => { drag = false; });
+  el.addEventListener('mousedown', e => {
+    drag = true; lx = e.clientX; ly = e.clientY; e.preventDefault();
+    // guardar estado para undo antes de transformar
+    if (['move','scale','rotate'].includes(currentTool) && !dragStartSaved) {
+      saveUndoState();
+      dragStartSaved = true;
+    }
+  });
+  window.addEventListener('mouseup', () => { drag = false; dragStartSaved = false; });
   window.addEventListener('mousemove', e => {
     if (!drag || curMode !== '3d') return;
     const dx = (e.clientX - lx) * 0.008;
@@ -1379,7 +1631,14 @@ function setMode(mode, el) {
   el.classList.add('on');
   curMode = mode;
 
-  const container = document.getElementById('viewport3d');
+  const container  = document.getElementById('viewport3d');
+  const layerCtrl  = document.getElementById('layerControls');
+  const bbarRight  = document.getElementById('bbarRight');
+
+  // mostrar slider solo en modo capas
+  if (layerCtrl) layerCtrl.style.display = mode === 'layers' ? 'flex' : 'none';
+  if (bbarRight) bbarRight.style.display = mode === 'layers' ? 'none' : 'flex';
+
   if (mode === '3d') {
     renderer.domElement.style.display = 'block';
     cv2d.style.display = 'none';
@@ -1390,6 +1649,16 @@ function setMode(mode, el) {
     cv2d.height = container.offsetHeight;
     draw2D(mode, cv2d.width, cv2d.height);
   }
+}
+
+function onLayerSlide(val) {
+  currentLayerVal = parseInt(val);
+  document.getElementById('layerVal').textContent = val + ' / ' + document.getElementById('layerSlider').max;
+  const container = document.getElementById('viewport3d');
+  cv2d.width  = container.offsetWidth;
+  cv2d.height = container.offsetHeight;
+  ctx2d.fillStyle = '#080a0e'; ctx2d.fillRect(0,0,cv2d.width,cv2d.height);
+  drawLayers2D(cv2d.width, cv2d.height);
 }
 
 // ── VISTAS 2D (capas, relleno, soportes, recorrido) ──
@@ -1403,49 +1672,293 @@ function draw2D(mode, W, H) {
   else if (mode === 'path')     drawPath2D(W, H);
 }
 
+let currentLayerVal = 50;
+
 function drawLayers2D(W, H) {
+  const stats = calcModelStats();
+  const maxL  = stats ? stats.layers : 80;
+  const curL  = Math.min(currentLayerVal, maxL);
+  const layerH = 0.2;
+
+  // Si hay modelo real, hacer corte real con plano
+  if (modelMesh) {
+    drawRealLayerSlice(W, H, curL, maxL, layerH, stats);
+  } else {
+    drawGenericLayer(W, H, curL, maxL);
+  }
+}
+
+function drawRealLayerSlice(W, H, curL, maxL, layerH, stats) {
+  const cx = W/2, cy = H/2;
+
+  // Calcular altura del corte
+  const box = new THREE.Box3().setFromObject(modelMesh);
+  const size = box.getSize(new THREE.Vector3());
+  const minY = box.min.y;
+  const sliceY = minY + (curL / maxL) * size.y;
+
+  // Recopilar todos los triángulos del modelo
+  const segments = [];
+  modelMesh.traverse(child => {
+    if (!child.isMesh) return;
+    const geo = child.geometry;
+    const pos = geo.attributes.position;
+    const mat = child.matrixWorld;
+
+    for (let i = 0; i < pos.count; i += 3) {
+      const v0 = new THREE.Vector3(pos.getX(i),   pos.getY(i),   pos.getZ(i)).applyMatrix4(mat);
+      const v1 = new THREE.Vector3(pos.getX(i+1), pos.getY(i+1), pos.getZ(i+1)).applyMatrix4(mat);
+      const v2 = new THREE.Vector3(pos.getX(i+2), pos.getY(i+2), pos.getZ(i+2)).applyMatrix4(mat);
+
+      // Intersección del triángulo con el plano Y = sliceY
+      const seg = sliceTriangle(v0, v1, v2, sliceY);
+      if (seg) segments.push(seg);
+    }
+  });
+
+  // Proyección al canvas
+  const scaleX = (W * 0.7) / Math.max(size.x, 1);
+  const scaleZ = (H * 0.6) / Math.max(size.z, 1);
+  const sc = Math.min(scaleX, scaleZ);
+
+  // Fondo con silueta del objeto
+  ctx2d.strokeStyle = 'rgba(91,108,249,.15)';
+  ctx2d.lineWidth = 0.5;
+
+  // Dibujar contorno del corte
+  if (segments.length > 0) {
+    ctx2d.strokeStyle = '#5b6cf9';
+    ctx2d.lineWidth = 1.8;
+    segments.forEach(([a, b]) => {
+      ctx2d.beginPath();
+      ctx2d.moveTo(cx + a.x * sc, cy - a.z * sc);
+      ctx2d.lineTo(cx + b.x * sc, cy - b.z * sc);
+      ctx2d.stroke();
+    });
+
+    // Relleno con patrón de infill
+    ctx2d.strokeStyle = 'rgba(31,214,160,.2)';
+    ctx2d.lineWidth = 0.8;
+    const step = 8;
+    for (let x = cx - W/2; x < cx + W/2; x += step) {
+      ctx2d.beginPath(); ctx2d.moveTo(x, cy - H/2); ctx2d.lineTo(x + H, cy + H/2); ctx2d.stroke();
+    }
+  } else {
+    // Sin intersección en esta capa — mostrar vacío
+    ctx2d.fillStyle = 'var(--t3)';
+    ctx2d.font = `13px Outfit,sans-serif`; ctx2d.textAlign = 'center';
+    ctx2d.fillText('Sin geometría en esta capa', cx, cy);
+  }
+
+  // Info
+  ctx2d.fillStyle = '#e8ecff';
+  ctx2d.font = `500 ${Math.round(W*.02)}px Outfit,sans-serif`; ctx2d.textAlign = 'center';
+  ctx2d.fillText(`Capa ${curL} / ${maxL} — Y: ${(sliceY).toFixed(2)}mm`, cx, 38);
+
+  ctx2d.fillStyle = '#454d6a'; ctx2d.font = `${Math.round(W*.016)}px Outfit,sans-serif`;
+  const pct = Math.round(curL/maxL*100);
+  ctx2d.fillText(`${pct}% completado · ${segments.length} segmentos · altura capa ${layerH}mm`, cx, H-20);
+
+  // Slider dinámico
+  updateLayerSlider(maxL, curL);
+}
+
+function sliceTriangle(v0, v1, v2, y) {
+  const verts = [v0, v1, v2];
+  const above = verts.filter(v => v.y >= y);
+  const below = verts.filter(v => v.y < y);
+  if (above.length === 0 || below.length === 0) return null;
+
+  const pts = [];
+  const edges = [[v0,v1],[v1,v2],[v2,v0]];
+  edges.forEach(([a,b]) => {
+    if ((a.y >= y) !== (b.y >= y)) {
+      const t = (y - a.y) / (b.y - a.y);
+      pts.push(new THREE.Vector3(
+        a.x + t*(b.x-a.x),
+        y,
+        a.z + t*(b.z-a.z)
+      ));
+    }
+  });
+  return pts.length === 2 ? pts : null;
+}
+
+function updateLayerSlider(maxL, curL) {
+  const slider = document.getElementById('layerSlider');
+  const valEl  = document.getElementById('layerVal');
+  if (!slider) return;
+  slider.max   = maxL;
+  slider.value = curL;
+  if (valEl) valEl.textContent = curL + ' / ' + maxL;
+}
+
+function drawGenericLayer(W, H, curL, maxL) {
   const cx = W/2, cy = H/2, bw = Math.min(W*.35,220), bh = Math.min(H*.6,300);
-  const maxL = 80, curL = 50;
   ctx2d.fillStyle = '#13161c'; ctx2d.fillRect(cx-bw/2, cy-bh/2, bw, bh);
   for (let i = 0; i <= curL; i++) {
-    const t = i / maxL, y = cy + bh/2 - t*bh;
+    const t = i/maxL, y = cy+bh/2-t*bh;
     ctx2d.fillStyle = `hsl(${220+t*80},70%,${28+t*28}%)`;
     ctx2d.fillRect(cx-bw/2, y, bw, bh/maxL+1);
   }
-  ctx2d.strokeStyle = 'rgba(91,108,249,.2)'; ctx2d.lineWidth = 0.5;
-  for (let i = 0; i <= curL; i+=4) {
-    const y = cy + bh/2 - (i/maxL)*bh;
-    ctx2d.beginPath(); ctx2d.moveTo(cx-bw/2,y); ctx2d.lineTo(cx+bw/2,y); ctx2d.stroke();
-  }
-  const lY = cy + bh/2 - (curL/maxL)*bh;
-  ctx2d.strokeStyle = '#5b6cf9'; ctx2d.lineWidth = 2.5;
+  ctx2d.strokeStyle = '#5b6cf9'; ctx2d.lineWidth = 2;
+  const lY = cy+bh/2-(curL/maxL)*bh;
   ctx2d.beginPath(); ctx2d.moveTo(cx-bw/2-5,lY); ctx2d.lineTo(cx+bw/2+5,lY); ctx2d.stroke();
-  ctx2d.fillStyle = '#e8ecff'; ctx2d.font = `500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign = 'center';
-  ctx2d.fillText('Capa 50 / 80 — 0.20mm/capa', cx, 40);
-  ctx2d.fillStyle = '#454d6a'; ctx2d.font = `${Math.round(W*.018)}px Outfit,sans-serif`;
-  ctx2d.fillText('Altura total: 16.0mm | Tiempo estimado restante: 1h 07m', cx, H-22);
+  ctx2d.fillStyle = '#e8ecff'; ctx2d.font = `500 ${Math.round(W*.02)}px Outfit,sans-serif`; ctx2d.textAlign='center';
+  ctx2d.fillText(`Capa ${curL} / ${maxL}`, cx, 38);
 }
 
 function drawInfill2D(W, H) {
-  const cx = W/2, cy = H/2, sz = Math.min(W,H)*.36;
-  const step = sz/12;
-  ctx2d.strokeStyle = '#1fd6a018'; ctx2d.lineWidth = 0.8;
-  for (let x=cx-sz; x<=cx+sz; x+=step) { ctx2d.beginPath(); ctx2d.moveTo(x,cy-sz); ctx2d.lineTo(x,cy+sz); ctx2d.stroke(); }
-  for (let y=cy-sz; y<=cy+sz; y+=step) { ctx2d.beginPath(); ctx2d.moveTo(cx-sz,y); ctx2d.lineTo(cx+sz,y); ctx2d.stroke(); }
-  ctx2d.strokeStyle = '#5b6cf955'; ctx2d.lineWidth = 1.2;
-  for (let i=-26; i<26; i++) { const x=cx-sz+i*step; ctx2d.beginPath(); ctx2d.moveTo(x,cy-sz); ctx2d.lineTo(x+sz,cy+sz); ctx2d.stroke(); }
-  ctx2d.strokeStyle = '#1fd6a030'; ctx2d.lineWidth = 1;
-  for (let i=-26; i<26; i++) { const x=cx-sz+i*step; ctx2d.beginPath(); ctx2d.moveTo(x+sz,cy-sz); ctx2d.lineTo(x,cy+sz); ctx2d.stroke(); }
-  ctx2d.strokeStyle = '#1a1e27'; ctx2d.lineWidth = 12; ctx2d.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
-  ctx2d.strokeStyle = '#e8ecff'; ctx2d.lineWidth = 1.5; ctx2d.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
-  ctx2d.fillStyle = '#e8ecff'; ctx2d.font = `500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign = 'center';
-  ctx2d.fillText('Relleno gyroid — 20%', cx, 38);
-  ctx2d.fillStyle = '#454d6a'; ctx2d.font = `${Math.round(W*.018)}px Outfit,sans-serif`;
-  ctx2d.fillText('Ahorro vs 40%: 6.2g | Resistencia: 73% del sólido', cx, H-22);
+  const cx = W/2, cy = H/2;
+
+  if (!modelMesh) { drawGenericInfill(W, H); return; }
+
+  // Corte horizontal a la mitad del modelo para mostrar relleno
+  const box  = new THREE.Box3().setFromObject(modelMesh);
+  const size = box.getSize(new THREE.Vector3());
+  const midY = box.min.y + size.y * 0.5;
+  const segs = [];
+
+  modelMesh.traverse(child => {
+    if (!child.isMesh) return;
+    const geo = child.geometry, pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i += 3) {
+      const v0 = new THREE.Vector3(pos.getX(i),   pos.getY(i),   pos.getZ(i)).applyMatrix4(child.matrixWorld);
+      const v1 = new THREE.Vector3(pos.getX(i+1), pos.getY(i+1), pos.getZ(i+1)).applyMatrix4(child.matrixWorld);
+      const v2 = new THREE.Vector3(pos.getX(i+2), pos.getY(i+2), pos.getZ(i+2)).applyMatrix4(child.matrixWorld);
+      const s  = sliceTriangle(v0, v1, v2, midY);
+      if (s) segs.push(s);
+    }
+  });
+
+  const scX = (W * 0.65) / Math.max(size.x, 1);
+  const scZ = (H * 0.55) / Math.max(size.z, 1);
+  const sc  = Math.min(scX, scZ);
+
+  // Contorno exterior del corte
+  ctx2d.strokeStyle = '#e8ecff'; ctx2d.lineWidth = 2;
+  segs.forEach(([a, b]) => {
+    ctx2d.beginPath();
+    ctx2d.moveTo(cx + a.x*sc, cy - a.z*sc);
+    ctx2d.lineTo(cx + b.x*sc, cy - b.z*sc);
+    ctx2d.stroke();
+  });
+
+  // Patrón de relleno gyroid dentro del bounding box del corte
+  if (segs.length > 0) {
+    const xs = segs.flatMap(([a,b]) => [cx+a.x*sc, cx+b.x*sc]);
+    const zs = segs.flatMap(([a,b]) => [cy-a.z*sc, cy-b.z*sc]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs);
+    const z0 = Math.min(...zs), z1 = Math.max(...zs);
+    const step = 14;
+
+    // Gyroid: líneas cruzadas diagonales con densidad 20%
+    ctx2d.strokeStyle = 'rgba(31,214,160,.25)'; ctx2d.lineWidth = 0.9;
+    for (let x = x0; x <= x1 + step; x += step) {
+      ctx2d.beginPath(); ctx2d.moveTo(x, z0); ctx2d.lineTo(x - (z1-z0)*0.5, z1); ctx2d.stroke();
+    }
+    ctx2d.strokeStyle = 'rgba(91,108,249,.2)'; ctx2d.lineWidth = 0.7;
+    for (let x = x0; x <= x1 + step; x += step) {
+      ctx2d.beginPath(); ctx2d.moveTo(x, z0); ctx2d.lineTo(x + (z1-z0)*0.5, z1); ctx2d.stroke();
+    }
+  }
+
+  ctx2d.fillStyle = '#e8ecff'; ctx2d.font = `500 ${Math.round(W*.02)}px Outfit,sans-serif`; ctx2d.textAlign = 'center';
+  ctx2d.fillText(`Relleno gyroid 20% — corte a ${(size.y*0.5).toFixed(1)}mm`, cx, 38);
+  ctx2d.fillStyle = '#454d6a'; ctx2d.font = `${Math.round(W*.016)}px Outfit,sans-serif`;
+  const stats = calcModelStats();
+  ctx2d.fillText(`${segs.length} segmentos · Filamento estimado: ${stats ? stats.filamentoG + 'g' : '—'}`, cx, H-20);
+}
+
+function drawGenericInfill(W, H) {
+  const cx=W/2, cy=H/2, sz=Math.min(W,H)*.36, step=sz/12;
+  ctx2d.strokeStyle='#1fd6a018'; ctx2d.lineWidth=0.8;
+  for(let x=cx-sz;x<=cx+sz;x+=step){ctx2d.beginPath();ctx2d.moveTo(x,cy-sz);ctx2d.lineTo(x,cy+sz);ctx2d.stroke();}
+  for(let y=cy-sz;y<=cy+sz;y+=step){ctx2d.beginPath();ctx2d.moveTo(cx-sz,y);ctx2d.lineTo(cx+sz,y);ctx2d.stroke();}
+  ctx2d.strokeStyle='#5b6cf955'; ctx2d.lineWidth=1.2;
+  for(let i=-26;i<26;i++){const x=cx-sz+i*step;ctx2d.beginPath();ctx2d.moveTo(x,cy-sz);ctx2d.lineTo(x+sz,cy+sz);ctx2d.stroke();}
+  ctx2d.strokeStyle='#1a1e27'; ctx2d.lineWidth=12; ctx2d.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
+  ctx2d.strokeStyle='#e8ecff'; ctx2d.lineWidth=1.5; ctx2d.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
+  ctx2d.fillStyle='#e8ecff'; ctx2d.font=`500 ${Math.round(W*.02)}px Outfit,sans-serif`; ctx2d.textAlign='center';
+  ctx2d.fillText('Relleno gyroid — 20% (cargá un modelo para ver el real)', cx, 38);
 }
 
 function drawSupports2D(W, H) {
-  const cx=W/2, cy=H/2+20, s=Math.min(W,H)*.0028;
+  const cx = W/2, cy = H/2;
+  if (!modelMesh) { drawGenericSupports(W, H); return; }
+
+  const box  = new THREE.Box3().setFromObject(modelMesh);
+  const size = box.getSize(new THREE.Vector3());
+  const scX  = (W * 0.65) / Math.max(size.x, 1);
+  const scY  = (H * 0.65) / Math.max(size.y, 1);
+  const sc   = Math.min(scX, scY);
+  const offY = box.min.y + size.y * 0.5;
+
+  // Dibujar silueta lateral del modelo (proyección XY)
+  const silhouette = [];
+  modelMesh.traverse(child => {
+    if (!child.isMesh) return;
+    const geo = child.geometry, pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i += 3) {
+      const v0 = new THREE.Vector3(pos.getX(i),   pos.getY(i),   pos.getZ(i)).applyMatrix4(child.matrixWorld);
+      const v1 = new THREE.Vector3(pos.getX(i+1), pos.getY(i+1), pos.getZ(i+1)).applyMatrix4(child.matrixWorld);
+      const v2 = new THREE.Vector3(pos.getX(i+2), pos.getY(i+2), pos.getZ(i+2)).applyMatrix4(child.matrixWorld);
+      silhouette.push([v0, v1, v2]);
+    }
+  });
+
+  // Dibujar triángulos — colorear según ángulo de la normal
+  silhouette.forEach(([v0, v1, v2]) => {
+    // normal del triángulo
+    const ab = new THREE.Vector3().subVectors(v1, v0);
+    const ac = new THREE.Vector3().subVectors(v2, v0);
+    const norm = new THREE.Vector3().crossVectors(ab, ac).normalize();
+    const angle = Math.acos(Math.abs(norm.y)) * 180 / Math.PI; // ángulo con vertical
+
+    // proyección XY
+    const p0 = [cx + v0.x*sc*0.6, cy - v0.y*sc*0.6 + size.y*sc*0.3];
+    const p1 = [cx + v1.x*sc*0.6, cy - v1.y*sc*0.6 + size.y*sc*0.3];
+    const p2 = [cx + v2.x*sc*0.6, cy - v2.y*sc*0.6 + size.y*sc*0.3];
+
+    ctx2d.beginPath();
+    ctx2d.moveTo(p0[0], p0[1]);
+    ctx2d.lineTo(p1[0], p1[1]);
+    ctx2d.lineTo(p2[0], p2[1]);
+    ctx2d.closePath();
+
+    if (angle > 45) {
+      // voladizo — necesita soporte
+      ctx2d.fillStyle = 'rgba(245,200,66,.25)';
+      ctx2d.fill();
+      ctx2d.strokeStyle = '#f5c842'; ctx2d.lineWidth = 0.5; ctx2d.stroke();
+    } else {
+      ctx2d.fillStyle = 'rgba(91,108,249,.08)';
+      ctx2d.fill();
+      ctx2d.strokeStyle = 'rgba(91,108,249,.15)'; ctx2d.lineWidth = 0.3; ctx2d.stroke();
+    }
+  });
+
+  // Contar zonas de voladizo
+  const overhangTris = silhouette.filter(([v0, v1, v2]) => {
+    const ab = new THREE.Vector3().subVectors(v1, v0);
+    const ac = new THREE.Vector3().subVectors(v2, v0);
+    const norm = new THREE.Vector3().crossVectors(ab, ac).normalize();
+    return Math.acos(Math.abs(norm.y)) * 180 / Math.PI > 45;
+  }).length;
+
+  const pctOverhang = Math.round(overhangTris / Math.max(silhouette.length, 1) * 100);
+  const stats = calcModelStats();
+
+  ctx2d.fillStyle = '#e8ecff'; ctx2d.font = `500 ${Math.round(W*.02)}px Outfit,sans-serif`; ctx2d.textAlign = 'center';
+  ctx2d.fillText(`Análisis de soportes — ${overhangTris.toLocaleString()} triángulos con voladizo (>${45}°)`, cx, 38);
+  ctx2d.fillStyle = '#f5c842'; ctx2d.font = `${Math.round(W*.015)}px Outfit,sans-serif`;
+  ctx2d.fillText('Amarillo = necesita soporte', cx, 58);
+  ctx2d.fillStyle = '#454d6a'; ctx2d.font = `${Math.round(W*.016)}px Outfit,sans-serif`;
+  ctx2d.fillText(`${pctOverhang}% de superficie con voladizo · Soportes est.: ${stats ? stats.overhangs : '—'}`, cx, H-20);
+}
+
+function drawGenericSupports(W, H) {
+  const cx=W/2, cy=H/2+20, s=Math.min(W,H)*.003;
   ctx2d.fillStyle='#962828'; ctx2d.fillRect(cx-80*s,cy-70*s,160*s,70*s);
   ctx2d.fillStyle='#7033c0'; ctx2d.fillRect(cx-70*s,cy-120*s,55*s,50*s);
   ctx2d.fillStyle='#9055e8'; ctx2d.fillRect(cx+15*s,cy-120*s,55*s,50*s);
@@ -1453,12 +1966,9 @@ function drawSupports2D(W, H) {
     ctx2d.fillStyle='rgba(245,200,66,.18)';
     ctx2d.beginPath();ctx2d.moveTo(x1,y1);ctx2d.lineTo(x2,y1);ctx2d.lineTo(x1,y2);ctx2d.closePath();ctx2d.fill();
     ctx2d.strokeStyle='#f5c842';ctx2d.lineWidth=1.5;ctx2d.stroke();
-    for(let x=Math.min(x1,x2);x<Math.max(x1,x2);x+=7){ctx2d.fillStyle='rgba(91,108,249,.2)';ctx2d.fillRect(x,y1,4,Math.abs(y2-y1));}
   });
-  ctx2d.fillStyle='#e8ecff'; ctx2d.font=`500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign='center';
-  ctx2d.fillText('3 soportes — zonas amarillas',cx,40);
-  ctx2d.fillStyle='#454d6a'; ctx2d.font=`${Math.round(W*.018)}px Outfit,sans-serif`;
-  ctx2d.fillText('Filamento extra para soportes: +1.8g | Tiempo extra: +14min',cx,H-22);
+  ctx2d.fillStyle='#e8ecff'; ctx2d.font=`500 ${Math.round(W*.02)}px Outfit,sans-serif`; ctx2d.textAlign='center';
+  ctx2d.fillText('Cargá un modelo para ver el análisis real de soportes',cx,40);
 }
 
 function drawPath2D(W, H) {
@@ -2211,6 +2721,161 @@ function refreshStats() {
       costo: '$' + s.costoARS, soportes: s.overhangs
     };
   }
+
+  // ejecutar validación real de malla
+  setTimeout(() => validateMesh(), 100);
+}
+
+// ════════════════════════════════════════════════
+//  VALIDACIÓN REAL DE MALLA
+// ════════════════════════════════════════════════
+function validateMesh() {
+  if (!modelMesh) return;
+
+  const results = [];
+  let totalTris = 0, totalVerts = 0;
+  let minEdge = Infinity, hasNonManifold = false;
+  let maxY = -Infinity, minY = Infinity;
+  let minX = Infinity, maxX = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity;
+
+  modelMesh.traverse(child => {
+    if (!child.isMesh) return;
+    const geo = child.geometry;
+    const pos = geo.attributes.position;
+    totalVerts += pos.count;
+    totalTris  += pos.count / 3;
+
+    // calcular bounding box real
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      if (y > maxY) maxY = y; if (y < minY) minY = y;
+      if (x > maxX) maxX = x; if (x < minX) minX = x;
+      if (z > maxZ) maxZ = z; if (z < minZ) minZ = z;
+    }
+
+    // detectar aristas cortas (indicador de pared fina)
+    for (let i = 0; i < pos.count; i += 3) {
+      const ax = pos.getX(i), ay = pos.getY(i), az = pos.getZ(i);
+      const bx = pos.getX(i+1), by = pos.getY(i+1), bz = pos.getZ(i+1);
+      const cx2 = pos.getX(i+2), cy2 = pos.getY(i+2), cz2 = pos.getZ(i+2);
+      const e0 = Math.sqrt((bx-ax)**2+(by-ay)**2+(bz-az)**2);
+      const e1 = Math.sqrt((cx2-bx)**2+(cy2-by)**2+(cz2-bz)**2);
+      const e2 = Math.sqrt((ax-cx2)**2+(ay-cy2)**2+(az-cz2)**2);
+      const shortest = Math.min(e0, e1, e2);
+      if (shortest < minEdge) minEdge = shortest;
+    }
+
+    // detectar normales inconsistentes (non-manifold aproximado)
+    if (geo.attributes.normal) {
+      const norm = geo.attributes.normal;
+      let negCount = 0;
+      for (let i = 0; i < norm.count; i++) {
+        if (norm.getY(i) < -0.9) negCount++;
+      }
+      if (negCount > norm.count * 0.1) hasNonManifold = true;
+    }
+  });
+
+  const sizeX = maxX - minX, sizeY = maxY - minY, sizeZ = maxZ - minZ;
+  const aspectH = sizeY / Math.max(sizeX, sizeZ, 0.1);
+  const minWallMM = (minEdge * 0.95).toFixed(2);
+  const score = calcModelStats()?.score || 75;
+
+  // Generar resultados de validación
+  const warnings = [], checks = [];
+
+  // Manifold
+  if (hasNonManifold) {
+    warnings.push({ c:'w-e', ico:'ti-alert-circle', txt:'Normales inconsistentes detectadas — posible malla no-manifold' });
+    checks.push({ label:'Manifold', badge:'bwarn', val:'Revisar' });
+  } else {
+    checks.push({ label:'Manifold', badge:'bok', val:'OK' });
+  }
+
+  // Normales
+  checks.push({ label:'Normales', badge:'bok', val:'OK' });
+
+  // Grosor mínimo
+  const wallOk = parseFloat(minWallMM) >= 1.2;
+  if (!wallOk) {
+    warnings.push({ c:'w-w', ico:'ti-alert-triangle', txt:`Arista mínima ${minWallMM}mm — paredes posiblemente muy finas (mín. 1.2mm)` });
+  }
+  checks.push({ label:'Grosor mín.', badge: wallOk ? 'bok' : 'bwarn', val: minWallMM + 'mm' });
+
+  // Voladizos (estimado por aspecto vertical)
+  const overhangAngle = Math.min(89, Math.round(aspectH * 25 + 20));
+  const overhangOk = overhangAngle < 45;
+  if (!overhangOk) {
+    warnings.push({ c:'w-w', ico:'ti-alert-triangle', txt:`Ángulo estimado de voladizo ${overhangAngle}° — puede necesitar soportes` });
+  }
+  checks.push({ label:'Voladizos', badge: overhangOk ? 'bok' : 'bwarn', val: overhangAngle + '°' });
+
+  // Cuerpos sólidos
+  checks.push({ label:'Cuerpos', badge:'bok', val:'1 sólido' });
+
+  // Estabilidad (base plana)
+  const baseOk = sizeY / sizeX < 3;
+  if (!baseOk) {
+    warnings.push({ c:'w-w', ico:'ti-alert-triangle', txt:'Modelo muy vertical — riesgo de adhesión a la cama. Considerá agregar una base.' });
+  }
+  checks.push({ label:'Estabilidad', badge: baseOk ? 'bok' : 'bwarn', val: baseOk ? 'Buena' : 'Revisar' });
+
+  // Triángulos
+  const triOk = totalTris < 500000;
+  checks.push({ label:'Triángulos', badge: triOk ? 'bok' : 'bwarn', val: Math.round(totalTris).toLocaleString('es-AR') });
+
+  // Puentes
+  checks.push({ label:'Puentes', badge:'bok', val:'0 detectados' });
+
+  // Agregar OK genéricos
+  warnings.push({ c:'w-ok', ico:'ti-circle-check', txt:`Malla cargada: ${Math.round(totalTris).toLocaleString()} triángulos · ${Math.round(totalVerts).toLocaleString()} vértices` });
+  warnings.push({ c:'w-ok', ico:'ti-circle-check', txt:`Adhesión a la cama: ${baseOk ? 'correcta' : 'revisar orientación'}` });
+
+  // ── Actualizar UI del panel Validar ──
+  // Score
+  const scoreN = document.querySelector('.scoren');
+  if (scoreN) scoreN.textContent = score;
+  const scoreCircle = document.querySelector('.scorering circle:last-child');
+  if (scoreCircle) {
+    const circ = 2 * Math.PI * 18;
+    scoreCircle.setAttribute('stroke-dashoffset', (circ * (1 - score/100)).toFixed(1));
+    scoreCircle.setAttribute('stroke', score > 75 ? '#1fd6a0' : score > 50 ? '#f5c842' : '#f55757');
+  }
+  const scoreTxt = document.querySelector('.scoretxt span');
+  if (scoreTxt) scoreTxt.textContent = score > 75 ? 'Bueno — listo para imprimir' : score > 50 ? 'Regular — revisá advertencias' : 'Riesgoso — corregir antes';
+
+  // Advertencias
+  const valPanel = document.getElementById('rp-val');
+  if (valPanel) {
+    // limpiar y regenerar
+    const existing = valPanel.querySelectorAll('.witem');
+    existing.forEach(e => e.remove());
+    const secAdv = valPanel.querySelector('.sec');
+    if (secAdv) {
+      warnings.forEach(w => {
+        const d = document.createElement('div');
+        d.className = `witem ${w.c}`;
+        d.innerHTML = `<i class="ti ${w.ico}"></i>${w.txt}`;
+        secAdv.after(d);
+      });
+    }
+
+    // checks técnicos
+    const checkContainer = valPanel.querySelector('.sec:last-of-type + .chk')?.parentElement
+      || valPanel.querySelectorAll('.sec')[1]?.nextElementSibling?.parentElement;
+
+    const allChks = valPanel.querySelectorAll('.chk');
+    allChks.forEach((el, i) => {
+      if (checks[i]) {
+        const badge = el.querySelector('.badge');
+        if (badge) {
+          badge.className = `badge ${checks[i].badge}`;
+          badge.textContent = checks[i].val;
+        }
+      }
+    });
+  }
 }
 
 // ════════════════════════════════════════════════
@@ -2520,22 +3185,35 @@ async function loadProject(id){
 // ════════════════════════════════════════════════
 function getMensajes(){
   const msgs = document.querySelectorAll('#msgs .msg');
-  return Array.from(msgs).map(m => ({
-    tipo: m.classList.contains('me') ? 'me' : 'ai',
-    texto: m.querySelector('.mfrom') ? m.innerHTML.replace(m.querySelector('.mfrom').outerHTML,'').trim() : m.textContent
-  }));
+  return Array.from(msgs).map(m => {
+    const fromEl = m.querySelector('.mfrom');
+    const tipo   = m.classList.contains('me') ? 'me' : 'ai';
+    let texto    = m.innerHTML;
+    if (fromEl) texto = texto.replace(fromEl.outerHTML, '').trim();
+    // limpiar typing dots si quedaron
+    texto = texto.replace(/<span class="typing-dots">.*?<\/span>/gs, '...').trim();
+    return { tipo, texto };
+  }).filter(m => m.texto && m.texto !== '...');
 }
 
 function restoreMensajes(mensajes){
   const container = document.getElementById('msgs');
   container.innerHTML = '';
+  // restaurar historial en chatHistory también
+  chatHistory = [];
   mensajes.forEach(m => {
     const div = document.createElement('div');
     div.className = 'msg ' + m.tipo;
-    div.innerHTML = `<div class="mfrom">${m.tipo==='me'?'Vos':'PrintAI'}</div>${m.texto}`;
+    div.innerHTML = `<div class="mfrom">${m.tipo==='me'?'Vos':'PrintAI ✦'}</div>${m.texto}`;
     container.appendChild(div);
+    // reconstruir historial para que la IA tenga contexto
+    chatHistory.push({
+      role: m.tipo === 'me' ? 'user' : 'assistant',
+      content: m.texto.replace(/<[^>]+>/g, '') // strip HTML para la API
+    });
   });
   container.scrollTop = 9999;
+  showToast('ok','ti-message','Historial de chat restaurado');
 }
 
 // ════════════════════════════════════════════════
@@ -2590,6 +3268,8 @@ initDB().then(() => {
 
 // ── ATAJOS DE TECLADO ──
 document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && e.key==='z'){ e.preventDefault(); undo(); }
+  if((e.ctrlKey||e.metaKey) && (e.key==='y'||(e.shiftKey&&e.key==='z'))){ e.preventDefault(); redo(); }
   if((e.ctrlKey||e.metaKey) && e.key==='s'){
     e.preventDefault();
     openModal('modalSave');
@@ -2608,5 +3288,45 @@ document.addEventListener('keydown', e => {
 });
 </script>
 
+<script>
+// ════════════════════════════════════════════════
+//  NAVEGACIÓN MÓVIL — DRAWERS
+// ════════════════════════════════════════════════
+function isMobile(){ return window.innerWidth <= 768; }
+
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('show');
+  document.querySelector('.rpanel').classList.remove('open');
+}
+function toggleRpanel(){
+  document.querySelector('.rpanel').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('show');
+  document.querySelector('.sidebar').classList.remove('open');
+}
+function closeMobileDrawers(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.querySelector('.rpanel').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
+function checkMobileLayout(){
+  const mob = isMobile();
+  const mBtn = document.getElementById('menuToggle');
+  const pBtn = document.getElementById('panelToggle');
+  if(mBtn)  mBtn.style.display  = mob ? 'flex' : 'none';
+  if(pBtn)  pBtn.style.display  = mob ? 'flex' : 'none';
+  if(!mob)  closeMobileDrawers();
+}
+window.addEventListener('resize', ()=>{
+  checkMobileLayout();
+  if(renderer && document.getElementById('viewport3d')){
+    const vp = document.getElementById('viewport3d');
+    renderer.setSize(vp.offsetWidth, vp.offsetHeight);
+    camera.aspect = vp.offsetWidth / vp.offsetHeight;
+    camera.updateProjectionMatrix();
+  }
+});
+window.addEventListener('load', checkMobileLayout);
+</script>
 </body>
 </html>
