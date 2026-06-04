@@ -489,22 +489,22 @@ select.prsel{
   </div>
 
   <!-- ICON BAR -->
-  <div class="iconbar">
-    <div class="ib on" data-tip="Herramienta principal" onclick="selIb(this)"><i class="ti ti-vector-bezier"></i></div>
-    <div class="ib" data-tip="Selección" onclick="selIb(this)"><i class="ti ti-pointer"></i></div>
-    <div class="ib" data-tip="Mover" onclick="selIb(this)"><i class="ti ti-arrows-move"></i></div>
-    <div class="ib" data-tip="Escalar" onclick="selIb(this)"><i class="ti ti-arrows-diagonal"></i></div>
-    <div class="ib" data-tip="Rotar" onclick="selIb(this)"><i class="ti ti-rotate-clockwise"></i></div>
-    <div class="ib-sep"></div>
-    <div class="ib" data-tip="Corte transversal" onclick="selIb(this)"><i class="ti ti-cut"></i></div>
-    <div class="ib" data-tip="Editor de malla" onclick="selIb(this)"><i class="ti ti-topology-star-3"></i></div>
-    <div class="ib" data-tip="Medidas" onclick="selIb(this)"><i class="ti ti-ruler-measure"></i></div>
-    <div class="ib-sep"></div>
-    <div class="ib" data-tip="Ver capas" onclick="selIb(this)"><i class="ti ti-layers-intersect"></i></div>
-    <div class="ib" data-tip="Ver relleno" onclick="selIb(this)"><i class="ti ti-grid-dots"></i></div>
-    <div class="ib-sep"></div>
-    <div class="ib" data-tip="Zoom encuadrar" onclick="selIb(this)"><i class="ti ti-maximize"></i></div>
-  </div>
+<div class="iconbar">
+<div class="ib on" data-tip="Vista libre" onclick="ibAction('free',this)"><i class="ti ti-vector-bezier"></i></div>
+<div class="ib" data-tip="Seleccionar modelo" onclick="ibAction('select',this)"><i class="ti ti-pointer"></i></div>
+<div class="ib" data-tip="Mover modelo" onclick="ibAction('move',this)"><i class="ti ti-arrows-move"></i></div>
+<div class="ib" data-tip="Escalar modelo" onclick="ibAction('scale',this)"><i class="ti ti-arrows-diagonal"></i></div>
+<div class="ib" data-tip="Rotar modelo" onclick="ibAction('rotate',this)"><i class="ti ti-rotate-clockwise"></i></div>
+<div class="ib-sep"></div>
+<div class="ib" data-tip="Wireframe on/off" onclick="ibAction('wire',this)"><i class="ti ti-cut"></i></div>
+<div class="ib" data-tip="Grilla on/off" onclick="ibAction('grid',this)"><i class="ti ti-topology-star-3"></i></div>
+<div class="ib" data-tip="Dimensiones del modelo" onclick="ibAction('dims',this)"><i class="ti ti-ruler-measure"></i></div>
+<div class="ib-sep"></div>
+<div class="ib" data-tip="Ver capas" onclick="ibAction('layers',this)"><i class="ti ti-layers-intersect"></i></div>
+<div class="ib" data-tip="Ver relleno" onclick="ibAction('infill',this)"><i class="ti ti-grid-dots"></i></div>
+<div class="ib-sep"></div>
+<div class="ib" data-tip="Encuadrar modelo" onclick="ibAction('fit',this)"><i class="ti ti-maximize"></i></div>
+</div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -518,54 +518,10 @@ select.prsel{
       </div>
     </div>
     <div class="sb-section"><div class="sb-label">Proyectos recientes</div></div>
-    <div class="sb-scroll">
-      <div class="proj on" onclick="selProj(this)">
-        <div class="proj-ico"><i class="ti ti-box" style="color:var(--acc2)"></i></div>
-        <div style="min-width:0">
-          <div class="proj-name">Castillo toy</div>
-          <div class="proj-time">Hace 2h · PLA</div>
-        </div>
-        <div class="proj-dot" style="background:var(--warn)"></div>
-      </div>
-      <div class="proj" onclick="selProj(this)">
-        <div class="proj-ico"><i class="ti ti-settings-2" style="color:var(--ok)"></i></div>
-        <div style="min-width:0">
-          <div class="proj-name">Engranaje v2</div>
-          <div class="proj-time">Ayer · ABS</div>
-        </div>
-        <div class="proj-dot" style="background:var(--ok)"></div>
-      </div>
-      <div class="proj" onclick="selProj(this)">
-        <div class="proj-ico"><i class="ti ti-device-laptop" style="color:var(--info)"></i></div>
-        <div style="min-width:0">
-          <div class="proj-name">Soporte monitor</div>
-          <div class="proj-time">3 días · PETG</div>
-        </div>
-        <div class="proj-dot" style="background:var(--ok)"></div>
-      </div>
-      <div class="proj" onclick="selProj(this)">
-        <div class="proj-ico"><i class="ti ti-hexagon-3d" style="color:var(--warn)"></i></div>
-        <div style="min-width:0">
-          <div class="proj-name">Figura Minion</div>
-          <div class="proj-time">1 semana · PLA+</div>
-        </div>
-        <div class="proj-dot" style="background:var(--err)"></div>
-      </div>
-      <div class="proj" onclick="selProj(this)">
-        <div class="proj-ico"><i class="ti ti-flower" style="color:#f07"></i></div>
-        <div style="min-width:0">
-          <div class="proj-name">Florero gen.</div>
-          <div class="proj-time">2 sem · Seda PLA</div>
-        </div>
-        <div class="proj-dot" style="background:var(--ok)"></div>
-      </div>
-      <div class="proj" onclick="selProj(this)">
-        <div class="proj-ico"><i class="ti ti-brain" style="color:#a0f"></i></div>
-        <div style="min-width:0">
-          <div class="proj-name">Cerebro anatómico</div>
-          <div class="proj-time">1 mes · Resina</div>
-        </div>
-        <div class="proj-dot" style="background:var(--ok)"></div>
+    <div class="sb-scroll" id="sb-scroll">
+      <div style="padding:24px 10px;text-align:center">
+        <i class="ti ti-box" style="font-size:32px;color:var(--t3);display:block;margin-bottom:10px"></i>
+        <p style="font-size:12px;color:var(--t3);line-height:1.6">Todavía no tenés proyectos.<br>Subí un archivo para empezar.</p>
       </div>
     </div>
   </div>
@@ -763,21 +719,21 @@ select.prsel{
     <!-- EXPORT -->
     <div class="rpbody" id="rp-exp">
       <div class="sec">Formato de exportación</div>
-      <div class="exitem">
+      <div class="exitem" onclick="exportModel('stl')">
         <div class="exl">
           <i class="ti ti-file-3d"></i>
           <div><div class="exname">STL</div><div class="exdesc">Estándar universal para impresión</div></div>
         </div>
         <i class="ti ti-download exdl"></i>
       </div>
-      <div class="exitem">
+      <div class="exitem" onclick="exportModel('obj')">
         <div class="exl">
           <i class="ti ti-cube-3d-sphere"></i>
           <div><div class="exname">OBJ</div><div class="exdesc">Con materiales y UV maps</div></div>
         </div>
         <i class="ti ti-download exdl"></i>
       </div>
-      <div class="exitem">
+      <div class="exitem" onclick="exportModel('3mf')">
         <div class="exl">
           <i class="ti ti-packages"></i>
           <div><div class="exname">3MF</div><div class="exdesc">Config. completa embebida</div></div>
@@ -816,6 +772,88 @@ function selIb(el){
   document.querySelectorAll('.ib').forEach(i=>i.classList.remove('on'));
   el.classList.add('on');
 }
+
+// ── ACCIONES DEL ICONBAR ──
+let currentTool = 'free';
+
+function ibAction(action, el) {
+  const toolActions = ['free','select','move','scale','rotate'];
+  if(toolActions.includes(action)){
+    currentTool = action;
+    // quitar .on solo de los botones de herramienta (primeros 5)
+    document.querySelectorAll('.ib').forEach(i=>i.classList.remove('on'));
+    el.classList.add('on');
+    const labels = {
+      free:   'Vista libre — arrastrá para orbitar',
+      select: 'Selección — click sobre el modelo',
+      move:   'Mover — arrastrá el modelo en el plano',
+      scale:  'Escalar — scroll para agrandar/achicar',
+      rotate: 'Rotar — arrastrá para rotar el modelo'
+    };
+    showToast('ok','ti-hand-click', labels[action]);
+    updateDragBehavior(action);
+    return;
+  }
+
+  // botones de acción directa (no cambian herramienta activa)
+  if(action === 'wire'){
+    const btn = document.getElementById('btn-solido');
+    if(btn) btn.click();
+    el.classList.toggle('on');
+    showToast('ok','ti-vector-triangle', el.classList.contains('on') ? 'Wireframe activado' : 'Vista sólida');
+  }
+  else if(action === 'grid'){
+    const btn = document.getElementById('btn-grid');
+    if(btn) btn.click();
+    el.classList.toggle('on');
+    showToast('ok','ti-grid', el.classList.contains('on') ? 'Grilla ocultada' : 'Grilla visible');
+  }
+  else if(action === 'dims'){
+    if(!modelMesh){ showToast('warn','ti-alert-triangle','No hay modelo cargado'); return; }
+    const chip = document.getElementById('dimChip');
+    showToast('ok','ti-ruler-measure', 'Dimensiones: ' + (chip ? chip.textContent : '—'));
+    // resaltar el chip de dimensiones
+    if(chip){ chip.parentElement.style.borderColor='var(--acc)'; setTimeout(()=>chip.parentElement.style.borderColor='',2000); }
+  }
+  else if(action === 'layers'){
+    const tab = document.querySelector('.btab:nth-child(2)');
+    if(tab) tab.click();
+    showToast('ok','ti-layers-intersect','Vista de capas');
+  }
+  else if(action === 'infill'){
+    const tab = document.querySelector('.btab:nth-child(3)');
+    if(tab) tab.click();
+    showToast('ok','ti-grid-dots','Vista de relleno');
+  }
+  else if(action === 'fit'){
+    fitModel();
+  }
+}
+
+function fitModel(){
+  if(!modelMesh || !camera){
+    showToast('warn','ti-alert-triangle','No hay modelo para encuadrar');
+    return;
+  }
+  // centrar cámara en el modelo
+  const box = new THREE.Box3().setFromObject(modelMesh);
+  const center = box.getCenter(new THREE.Vector3());
+  const size   = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  camTarget.copy(center);
+  spherical.radius = maxDim * 2.2;
+  spherical.theta  = 0.5;
+  spherical.phi    = 1.0;
+  updateCamera();
+  showToast('ok','ti-maximize','Modelo encuadrado');
+}
+
+// Modificar comportamiento del drag según herramienta activa
+function updateDragBehavior(tool){
+  // guardamos el tool actual; el mousemove lo lee
+  currentTool = tool;
+}
+
 function selProj(el){
   document.querySelectorAll('.proj').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
@@ -1234,11 +1272,39 @@ function setupControls() {
   window.addEventListener('mouseup', () => { drag = false; });
   window.addEventListener('mousemove', e => {
     if (!drag || curMode !== '3d') return;
-    spherical.theta -= (e.clientX - lx) * 0.008;
-    spherical.phi   -= (e.clientY - ly) * 0.006;
-    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    const dx = (e.clientX - lx) * 0.008;
+    const dy = (e.clientY - ly) * 0.006;
+
+    if(currentTool === 'move'){
+      // mover el modelo en el plano XZ
+      if(modelMesh){
+        modelMesh.position.x += (e.clientX - lx) * 0.15;
+        modelMesh.position.z += (e.clientY - ly) * 0.15;
+      }
+    } else if(currentTool === 'scale'){
+      // escalar con drag horizontal
+      if(modelMesh){
+        const factor = 1 + (e.clientX - lx) * 0.005;
+        modelMesh.scale.multiplyScalar(Math.max(0.95, Math.min(1.05, factor)));
+        const box = new THREE.Box3().setFromObject(modelMesh);
+        const size = box.getSize(new THREE.Vector3());
+        document.getElementById('dimChip').textContent =
+          Math.round(size.x) + ' × ' + Math.round(size.z) + ' × ' + Math.round(size.y) + ' mm';
+      }
+    } else if(currentTool === 'rotate'){
+      // rotar solo el modelo (no la cámara)
+      if(modelMesh){
+        modelMesh.rotation.y -= dx;
+        modelMesh.rotation.x -= dy * 0.5;
+      }
+    } else {
+      // free / select — orbitar cámara (comportamiento default)
+      spherical.theta -= dx;
+      spherical.phi   -= dy;
+      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+      updateCamera();
+    }
     lx = e.clientX; ly = e.clientY;
-    updateCamera();
   });
   el.addEventListener('wheel', e => {
     e.preventDefault();
@@ -1657,6 +1723,323 @@ document.getElementById('installBtn').addEventListener('click', async () => {
   deferredInstallPrompt = null;
 });
 
+
+// ════════════════════════════════════════════════
+//  EXPORTACIÓN REAL DE MODELOS
+// ════════════════════════════════════════════════
+function exportModel(format) {
+  if (!modelMesh) {
+    showToast('warn','ti-alert-triangle','Cargá un modelo primero');
+    selRp('exp', document.querySelectorAll('.rptab')[3]);
+    return;
+  }
+
+  const name = (currentProject ? currentProject.nombre : 'modelo').replace(/\s+/g,'-').toLowerCase();
+
+  if (format === 'stl') {
+    const blob = exportSTL(modelMesh);
+    downloadBlob(blob, name + '.stl', 'application/octet-stream');
+    showToast('ok','ti-file-3d', name + '.stl descargado');
+  }
+  else if (format === 'obj') {
+    const text = exportOBJ(modelMesh);
+    const blob = new Blob([text], { type: 'text/plain' });
+    downloadBlob(blob, name + '.obj', 'text/plain');
+    showToast('ok','ti-cube-3d-sphere', name + '.obj descargado');
+  }
+  else if (format === '3mf') {
+    const xml = exportThreeMF(modelMesh, name);
+    const blob = new Blob([xml], { type: 'application/xml' });
+    downloadBlob(blob, name + '.3mf', 'application/xml');
+    showToast('ok','ti-packages', name + '.3mf descargado');
+  }
+}
+
+function downloadBlob(blob, filename, type) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ── EXPORTAR STL BINARIO ──
+function exportSTL(obj) {
+  const geoms = [];
+  obj.traverse(child => {
+    if (!child.isMesh) return;
+    let geo = child.geometry.clone();
+    // aplicar la transformación del objeto al mesh
+    geo.applyMatrix4(child.matrixWorld);
+    if (!geo.attributes.normal) geo.computeVertexNormals();
+    geoms.push(geo);
+  });
+
+  // contar triángulos totales
+  let totalTris = 0;
+  geoms.forEach(g => { totalTris += g.attributes.position.count / 3; });
+
+  const buf    = new ArrayBuffer(84 + totalTris * 50);
+  const view   = new DataView(buf);
+  const header = new TextEncoder().encode('PrintAI Studio Export'.padEnd(80, ' '));
+  for (let i = 0; i < 80; i++) view.setUint8(i, header[i] || 0);
+  view.setUint32(80, totalTris, true);
+
+  let offset = 84;
+  geoms.forEach(geo => {
+    const pos  = geo.attributes.position;
+    const norm = geo.attributes.normal;
+    const tris = pos.count / 3;
+    for (let i = 0; i < tris; i++) {
+      const ni = i * 3;
+      // normal del triángulo
+      const nx = norm ? norm.getX(ni) : 0;
+      const ny = norm ? norm.getY(ni) : 1;
+      const nz = norm ? norm.getZ(ni) : 0;
+      view.setFloat32(offset,      nx, true); offset += 4;
+      view.setFloat32(offset,      ny, true); offset += 4;
+      view.setFloat32(offset,      nz, true); offset += 4;
+      // 3 vértices
+      for (let j = 0; j < 3; j++) {
+        const vi = ni + j;
+        view.setFloat32(offset, pos.getX(vi), true); offset += 4;
+        view.setFloat32(offset, pos.getY(vi), true); offset += 4;
+        view.setFloat32(offset, pos.getZ(vi), true); offset += 4;
+      }
+      view.setUint16(offset, 0, true); offset += 2; // atributo
+    }
+  });
+  return new Blob([buf], { type: 'application/octet-stream' });
+}
+
+// ── EXPORTAR OBJ ──
+function exportOBJ(obj) {
+  let out = '# PrintAI Studio Export\n# ' + new Date().toISOString() + '\n\n';
+  let vOffset = 1;
+
+  obj.traverse(child => {
+    if (!child.isMesh) return;
+    const geo  = child.geometry.clone();
+    geo.applyMatrix4(child.matrixWorld);
+    if (!geo.attributes.normal) geo.computeVertexNormals();
+
+    const pos  = geo.attributes.position;
+    const norm = geo.attributes.normal;
+    const name = child.name || 'mesh';
+
+    out += `o ${name}\n`;
+    for (let i = 0; i < pos.count; i++) {
+      out += `v ${pos.getX(i).toFixed(6)} ${pos.getY(i).toFixed(6)} ${pos.getZ(i).toFixed(6)}\n`;
+    }
+    if (norm) {
+      for (let i = 0; i < norm.count; i++) {
+        out += `vn ${norm.getX(i).toFixed(6)} ${norm.getY(i).toFixed(6)} ${norm.getZ(i).toFixed(6)}\n`;
+      }
+    }
+    out += 's off\n';
+    for (let i = 0; i < pos.count; i += 3) {
+      const a = vOffset+i, b = vOffset+i+1, cc = vOffset+i+2;
+      out += norm
+        ? `f ${a}//${a} ${b}//${b} ${cc}//${cc}\n`
+        : `f ${a} ${b} ${cc}\n`;
+    }
+    vOffset += pos.count;
+  });
+  return out;
+}
+
+// ── EXPORTAR 3MF (XML) ──
+function exportThreeMF(obj, name) {
+  let vertices = '', triangles = '';
+  let vIdx = 0;
+  const allV = [], allT = [];
+
+  obj.traverse(child => {
+    if (!child.isMesh) return;
+    const geo = child.geometry.clone();
+    geo.applyMatrix4(child.matrixWorld);
+    const pos = geo.attributes.position;
+    const base = vIdx;
+    for (let i = 0; i < pos.count; i++) {
+      allV.push(`<vertex x="${pos.getX(i).toFixed(4)}" y="${pos.getY(i).toFixed(4)}" z="${pos.getZ(i).toFixed(4)}"/>`);
+      vIdx++;
+    }
+    for (let i = 0; i < pos.count; i += 3) {
+      allT.push(`<triangle v1="${base+i}" v2="${base+i+1}" v3="${base+i+2}"/>`);
+    }
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+  <metadata name="Application">PrintAI Studio</metadata>
+  <metadata name="CreationDate">${new Date().toISOString()}</metadata>
+  <resources>
+    <object id="1" type="model" name="${name}">
+      <mesh>
+        <vertices>${allV.join('')}</vertices>
+        <triangles>${allT.join('')}</triangles>
+      </mesh>
+    </object>
+  </resources>
+  <build><item objectid="1"/></build>
+</model>`;
+}
+
+// ════════════════════════════════════════════════
+//  STATS Y VALIDACIÓN CALCULADOS DEL MODELO REAL
+// ════════════════════════════════════════════════
+function calcModelStats() {
+  if (!modelMesh) return null;
+
+  const box  = new THREE.Box3().setFromObject(modelMesh);
+  const size = box.getSize(new THREE.Vector3());
+
+  // contar triángulos reales
+  let triCount = 0;
+  modelMesh.traverse(c => {
+    if (c.isMesh && c.geometry.attributes.position)
+      triCount += c.geometry.attributes.position.count / 3;
+  });
+
+  // volumen aproximado (bounding box * factor de relleno)
+  const bboxVol   = size.x * size.y * size.z;          // mm³
+  const solidVol  = bboxVol * 0.18;                     // estimado ~18% del bbox
+  const infillPct = 0.20;
+  const shellMM   = 1.2;
+  const shellVol  = (size.x * size.z * shellMM * 2 + size.x * size.y * shellMM * 2) * 0.001;
+  const printVol  = solidVol * infillPct + shellVol;    // cm³
+
+  const filamentoCm3 = printVol;
+  const filamentoG   = filamentoCm3 * 1.24;             // densidad PLA ~1.24 g/cm³
+  const metrosFil    = filamentoCm3 / (Math.PI * 0.0875 * 0.0875); // diámetro 1.75mm
+  const costoARS     = filamentoG * 22;                 // ~$22/g PLA en Argentina
+
+  // tiempo estimado: función de volumen + complejidad
+  const velocidad    = 50;    // mm/s
+  const layerH       = 0.2;   // mm
+  const layers       = Math.ceil(size.y / layerH);
+  const perimsPerLayer = (size.x + size.z) * 2;
+  const tiempoSeg    = (perimsPerLayer * layers / velocidad) * 1.4; // factor overhead
+  const tiempoMin    = Math.round(tiempoSeg / 60);
+
+  // soportes: estimado por superficie de voladizo
+  const overhangs    = Math.max(0, Math.round((size.x * size.z * 0.001) * 0.15));
+
+  // riesgo de fallo
+  const aspectRatio  = size.y / Math.max(size.x, size.z);
+  const riskPct      = Math.min(90, Math.round(aspectRatio * 40 + (overhangs > 2 ? 20 : 0)));
+
+  // grosor mínimo estimado
+  const minWall      = Math.max(0.4, Math.min(size.x, size.z) * 0.03).toFixed(1);
+
+  return {
+    size, triCount: Math.round(triCount),
+    filamentoG: filamentoG.toFixed(1),
+    metrosFil:  metrosFil.toFixed(1),
+    costoARS:   Math.round(costoARS),
+    tiempoMin,
+    tiempoStr:  tiempoMin >= 60 ? `${Math.floor(tiempoMin/60)}h ${tiempoMin%60}m` : `${tiempoMin}m`,
+    layers,
+    overhangs,
+    riskPct,
+    minWall,
+    score: Math.max(20, Math.min(99, 100 - riskPct - (minWall < 1.2 ? 15 : 0)))
+  };
+}
+
+function refreshStats() {
+  const s = calcModelStats();
+  if (!s) return;
+
+  // ── Panel Stats ──
+  const statGrid = document.querySelector('#rp-stats .statgrid');
+  if (statGrid) {
+    statGrid.innerHTML = `
+      <div class="statcard"><i class="ti ti-clock icon"></i>
+        <div class="v">${s.tiempoStr}</div><div class="l">Tiempo total</div></div>
+      <div class="statcard"><i class="ti ti-roll icon"></i>
+        <div class="v">${s.filamentoG}g</div><div class="l">Filamento</div></div>
+      <div class="statcard"><i class="ti ti-currency-dollar icon"></i>
+        <div class="v">$${s.costoARS}</div><div class="l">Costo est.</div></div>
+      <div class="statcard"><i class="ti ti-hierarchy icon"></i>
+        <div class="v">${s.overhangs}</div><div class="l">Soportes</div></div>`;
+  }
+
+  // riesgo
+  const riskFill = document.querySelector('.riskfill');
+  if (riskFill) {
+    riskFill.style.width = s.riskPct + '%';
+    riskFill.style.background = s.riskPct < 30 ? 'var(--ok)' : s.riskPct < 60 ? 'var(--warn)' : 'var(--err)';
+    const riskLabels = document.querySelectorAll('.riskbar + div span');
+    if (riskLabels[1]) riskLabels[1].textContent = `${s.riskPct}% — ${s.riskPct < 30 ? 'Bajo' : s.riskPct < 60 ? 'Moderado' : 'Alto'}`;
+    if (riskLabels[1]) riskLabels[1].style.color = s.riskPct < 30 ? 'var(--ok)' : s.riskPct < 60 ? 'var(--warn)' : 'var(--err)';
+  }
+
+  // parámetros
+  const chks = document.querySelectorAll('#rp-stats .chk');
+  if (chks.length >= 2) {
+    chks[0].querySelector('span') && (chks[0].lastElementChild.textContent = `${s.layers} capas · 0.20mm`);
+  }
+
+  // ── Panel Validación ──
+  const scoreN = document.querySelector('.scoren');
+  if (scoreN) scoreN.textContent = s.score;
+  const scoreCircle = document.querySelector('.scorering circle:last-child');
+  if (scoreCircle) {
+    const circumference = 2 * Math.PI * 18;
+    const dash = circumference * (1 - s.score / 100);
+    scoreCircle.setAttribute('stroke-dashoffset', dash.toFixed(1));
+    scoreCircle.setAttribute('stroke', s.score > 75 ? '#1fd6a0' : s.score > 50 ? '#f5c842' : '#f55757');
+  }
+  const scoreTxt = document.querySelector('.scoretxt span');
+  if (scoreTxt) {
+    scoreTxt.textContent = s.score > 75 ? 'Bueno — listo para imprimir' :
+                           s.score > 50 ? 'Regular — revisá advertencias' : 'Riesgoso — corregir antes';
+  }
+
+  // advertencias dinámicas
+  const warnList = document.querySelector('#rp-val .warn-list, #rp-val > .witem:first-of-type')?.parentElement;
+  if (warnList) {
+    const warns = [];
+    if (parseFloat(s.minWall) < 1.2)
+      warns.push({ c:'w-w', ico:'ti-alert-triangle', txt:`Pared estimada ${s.minWall}mm — mínimo recomendado 1.2mm` });
+    if (s.overhangs > 2)
+      warns.push({ c:'w-w', ico:'ti-alert-triangle', txt:`${s.overhangs} zonas de voladizo detectadas` });
+    if (s.riskPct > 60)
+      warns.push({ c:'w-e', ico:'ti-flame', txt:'Riesgo alto de fallo — modelo muy vertical' });
+    warns.push({ c:'w-ok', ico:'ti-circle-check', txt:'Adhesión a la cama: correcta' });
+    warns.push({ c:'w-ok', ico:'ti-circle-check', txt:`${s.triCount.toLocaleString()} triángulos — malla cargada` });
+
+    const existing = warnList.querySelectorAll('.witem');
+    existing.forEach(e => e.remove());
+    warns.forEach(w => {
+      const d = document.createElement('div');
+      d.className = `witem ${w.c}`;
+      d.innerHTML = `<i class="ti ${w.ico}"></i>${w.txt}`;
+      warnList.appendChild(d);
+    });
+  }
+
+  // ── barra inferior ──
+  const bright = document.querySelector('.bbar-right');
+  if (bright) {
+    bright.innerHTML = `
+      <span class="bstat">Polígonos: <b>${s.triCount.toLocaleString('es-AR')}</b></span>
+      <span class="bstat">Filamento: <b style="color:var(--ok)">${s.filamentoG}g</b></span>
+      <span class="bstat">Tiempo: <b>${s.tiempoStr}</b></span>
+      <span class="bstat">Capas: <b>${s.layers}</b></span>`;
+  }
+
+  // guardar en proyecto actual
+  if (currentProject) {
+    currentProject.stats = {
+      tiempo: s.tiempoStr, filamento: s.filamentoG + 'g',
+      costo: '$' + s.costoARS, soportes: s.overhangs
+    };
+  }
+}
+
 // ════════════════════════════════════════════════
 //  SISTEMA DE PROYECTOS (IndexedDB)
 // ════════════════════════════════════════════════
@@ -1907,7 +2290,7 @@ const COLORS_BY_MAT = {
 };
 
 async function renderProjectList(){
-  const container = document.querySelector('.sb-scroll');
+  const container = document.getElementById('sb-scroll');
   if(!container) return;
   
   let proyectos = [];
@@ -1917,9 +2300,9 @@ async function renderProjectList(){
   // proyectos demo si está vacío
   if(proyectos.length === 0){
     container.innerHTML = `
-      <div style="padding:20px 10px;text-align:center">
-        <i class="ti ti-box" style="font-size:32px;color:var(--t3);display:block;margin-bottom:8px"></i>
-        <p style="font-size:12px;color:var(--t3);line-height:1.5">Todavía no tenés proyectos.<br>Subí una imagen para empezar.</p>
+      <div style="padding:24px 10px;text-align:center">
+        <i class="ti ti-box" style="font-size:32px;color:var(--t3);display:block;margin-bottom:10px"></i>
+        <p style="font-size:12px;color:var(--t3);line-height:1.6">Todavía no tenés proyectos.<br>Subí un archivo para empezar.</p>
       </div>`;
     return;
   }
