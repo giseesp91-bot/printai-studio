@@ -50,9 +50,11 @@ html,body{
   grid-template-rows:52px 1fr;
   grid-template-columns:56px 220px 1fr 300px;
   height:100vh;
+  height:100dvh;
   overflow:hidden;
+  position:relative;
 }
-.app > *{ min-height:0; }
+.app > *{ min-height:0; min-width:0; }
 
 /* ── TOPBAR ── */
 .topbar{
@@ -386,24 +388,31 @@ select.prsel{
 /* ══════════════════════════════════════════
    RESPONSIVE MÓVIL
 ══════════════════════════════════════════ */
+
+/* Backdrop para drawers — siempre disponible */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 199;
+}
+.sidebar-backdrop.show { display: block }
+
 @media (max-width: 768px) {
   .app {
-    grid-template-rows: 48px 1fr 52px;
-    grid-template-columns: 1fr;
-    height: 100vh;
-    height: 100dvh;
+    grid-template-rows: 48px 1fr 52px !important;
+    grid-template-columns: 1fr !important;
   }
-  .topbar { padding: 0 12px; gap: 0 }
+  .topbar { padding: 0 12px }
   .logo-name { font-size: 14px }
   .top-tabs { display: none }
   .top-right { gap: 6px }
-  .tbtn span, .tbtn { font-size: 11px; padding: 5px 8px }
+  .tbtn { font-size: 11px; padding: 5px 8px }
   #btn-undo, #btn-redo { display: none }
-
-  /* iconbar se convierte en barra inferior */
   .iconbar {
-    grid-row: 3;
-    grid-column: 1;
+    grid-row: 3 !important;
+    grid-column: 1 !important;
     flex-direction: row;
     justify-content: space-around;
     padding: 0 8px;
@@ -416,72 +425,45 @@ select.prsel{
   .iconbar::-webkit-scrollbar { display: none }
   .ib { width: 44px; height: 44px }
   .ib-sep { display: none }
-
-  /* sidebar oculto por defecto, abre como drawer */
   .sidebar {
-    position: fixed;
-    left: -240px;
-    top: 48px;
-    bottom: 52px;
-    width: 240px;
+    position: fixed !important;
+    left: -240px !important;
+    top: 48px; bottom: 52px;
+    width: 240px !important;
     z-index: 200;
     transition: left .25s ease;
-    border-right: 1px solid var(--b2);
     box-shadow: 4px 0 20px rgba(0,0,0,.4);
   }
-  .sidebar.open { left: 0 }
-  .sidebar-backdrop {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.5);
-    z-index: 199;
-  }
-  .sidebar-backdrop.show { display: block }
-
-  /* center ocupa todo */
+  .sidebar.open { left: 0 !important }
   .center {
-    grid-row: 2;
-    grid-column: 1;
+    grid-row: 2 !important;
+    grid-column: 1 !important;
   }
-
-  /* panel derecho como drawer desde la derecha */
   .rpanel {
-    position: fixed;
-    right: -310px;
-    top: 48px;
-    bottom: 52px;
-    width: 300px;
+    position: fixed !important;
+    right: -310px !important;
+    top: 48px; bottom: 52px;
+    width: 300px !important;
     z-index: 200;
     transition: right .25s ease;
-    border-left: 1px solid var(--b2);
     box-shadow: -4px 0 20px rgba(0,0,0,.4);
   }
-  .rpanel.open { right: 0 }
-
-  /* barra inferior de modos más compacta */
+  .rpanel.open { right: 0 !important }
   .bbar { overflow-x: auto; scrollbar-width: none }
   .bbar::-webkit-scrollbar { display: none }
   .btab { padding: 0 10px; font-size: 11px }
   .bbar-right { display: none !important }
-
-  /* viewport chips más chicos */
   .vpchip { font-size: 10px; padding: 3px 7px }
-  .vp-views { padding: 3px; bottom: 8px }
+  .vp-views { bottom: 8px }
   .vview { font-size: 10px; padding: 4px 10px }
-  .vp-tbar { gap: 4px }
-  .vpbtn { font-size: 10px; padding: 4px 8px }
-
-  /* modales full width en mobile */
   .modal { min-width: unset; width: 94vw !important; margin: 0 auto }
-
-  /* toast abajo centrado */
   .toast { bottom: 60px; right: 50%; transform: translateX(50%) translateY(80px) }
   .toast.show { transform: translateX(50%) translateY(0) }
 }
-
 @media (max-width: 480px) {
   .logo-name { display: none }
+  .top-right .tbtn:not(.primary) { display: none !important }
+}
   .top-right .tbtn:not(.primary) { display: none }
 }
 
@@ -615,9 +597,6 @@ select.prsel{
   </div>
 
   <!-- ICON BAR -->
-<!-- backdrop para drawers móvil -->
-  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileDrawers()"></div>
-
   <div class="iconbar">
 <div class="ib on" data-tip="Vista libre" onclick="ibAction('free',this)"><i class="ti ti-vector-bezier"></i></div>
 <div class="ib" data-tip="Seleccionar modelo" onclick="ibAction('select',this)"><i class="ti ti-pointer"></i></div>
@@ -949,6 +928,7 @@ select.prsel{
 
   </div><!-- /rpanel -->
 
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileDrawers()"></div>
 </div><!-- /app -->
 
 <script>
