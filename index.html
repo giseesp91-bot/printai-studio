@@ -751,15 +751,19 @@ select.prsel{
     <button class="tbtn" id="menuToggle" onclick="toggleSidebar()" style="display:none;padding:6px 10px"><i class="ti ti-menu-2"></i></button>
     <div class="top-tabs">
       <button class="tt on" onclick="activeTT(this)"><i class="ti ti-layout-dashboard"></i>Workspace</button>
-      <button class="tt" onclick="activeTT(this)"><i class="ti ti-books"></i>Biblioteca</button>
-      <button class="tt" onclick="activeTT(this)"><i class="ti ti-clock-hour-3"></i>Historial</button>
-      <button class="tt" onclick="activeTT(this)"><i class="ti ti-settings"></i>Config</button>
-    </div>
+      <button class="tt on" onclick="switchTab('workspace',this)"><i class="ti ti-layout-dashboard"></i>Workspace</button>
+      <button class="tt" onclick="switchTab('biblioteca',this)"><i class="ti ti-books"></i>Biblioteca</button>
+      <button class="tt" onclick="switchTab('historial',this)"><i class="ti ti-clock-hour-3"></i>Historial</button>
+      <button class="tt" onclick="switchTab('config',this)"><i class="ti ti-settings"></i>Config</button>
     <div class="top-right">
       <button class="tbtn" onclick="openModal('modalHelp')" title="Ayuda de instalación">
         <i class="ti ti-help"></i>Cómo instalar
       </button>
       <div class="ia-badge"><div class="ia-dot"></div>IA activa — GPT-4o</div>
+      <button id="btn-undo" class="tbtn" onclick="undo()" title="Deshacer (Ctrl+Z)" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-back-up"></i></button>
+      <button id="btn-redo" class="tbtn" onclick="redo()" title="Rehacer (Ctrl+Y)" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-forward-up"></i></button>
+      <button class="tbtn" onclick="resetModel()" title="Resetear modelo al estado original"><i class="ti ti-refresh"></i></button>
+    <button class="tbtn" onclick="openNewProjectModal()"><i class="ti ti-plus"></i>Nuevo</button>
       <button class="tbtn" onclick="openProject()"><i class="ti ti-folder-open"></i>Abrir</button>
       <button class="tbtn" onclick="openModal('modalSave')"><i class="ti ti-device-floppy"></i>Guardar</button>
       <button class="tbtn primary" onclick="showExport()"><i class="ti ti-printer"></i>Exportar</button>
@@ -811,7 +815,7 @@ select.prsel{
   <!-- CENTER -->
   <div class="center">
     <div class="vp-wrap">
-      <div id="viewport3d" style="width:100%;height:100%;position:relative;"></div>
+      <div id="viewport3d" style="width:100%;height:100%;position:relative;" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)"></div>
 
       <!-- toolbar flotante -->
       <div class="vp-tbar">
@@ -1083,8 +1087,21 @@ select.prsel{
         <i class="ti ti-download exdl"></i>
       </div>
 
+      <div class="sec" style="margin-top:16px">Material de impresión</div>
+      <select class="prsel" id="materialSelect" onchange="onMaterialChange(this.value)">
+        <option value="pla">PLA — 215°C / 60°C cama</option>
+        <option value="pla+">PLA+ — 220°C / 65°C cama</option>
+        <option value="petg">PETG — 235°C / 80°C cama</option>
+        <option value="abs">ABS — 245°C / 100°C cama</option>
+        <option value="asa">ASA — 250°C / 100°C cama</option>
+        <option value="tpu">TPU — 225°C / 45°C cama</option>
+        <option value="resin">Resina — UV</option>
+        <option value="silk">Seda PLA — 215°C / 60°C cama</option>
+      </select>
+      <div id="matProps" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px"></div>
+
       <div class="sec" style="margin-top:16px">Perfil de impresora</div>
-      <select class="prsel">
+      <select class="prsel" id="printerSelect">
         <option>Ender 3 Pro</option>
         <option>Prusa MK4</option>
         <option>Bambu X1 Carbon</option>
@@ -1103,6 +1120,111 @@ select.prsel{
   </div><!-- /rpanel -->
 
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileDrawers()"></div>
+
+  <!-- VISTA BIBLIOTECA -->
+  <div id="view-biblioteca" style="display:none;position:fixed;inset:52px 0 0 0;background:var(--bg);z-index:50;overflow-y:auto;padding:32px;">
+    <div style="max-width:900px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <div>
+          <h2 style="font-family:'Inter',sans-serif;font-size:22px;font-weight:700;color:var(--t1);letter-spacing:-.03em">Biblioteca de modelos</h2>
+          <p style="font-size:13px;color:var(--t3);margin-top:4px">Tus modelos guardados y proyectos recientes</p>
+        </div>
+        <button class="tbtn primary" onclick="document.getElementById('fup').click()">
+          <i class="ti ti-upload"></i>Importar modelo
+        </button>
+      </div>
+      <div id="biblio-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+        <div style="padding:40px 20px;text-align:center;grid-column:1/-1;color:var(--t3)">
+          <i class="ti ti-box" style="font-size:40px;display:block;margin-bottom:12px;opacity:.4"></i>
+          <p style="font-size:14px">No tenés modelos guardados todavía</p>
+          <p style="font-size:12px;margin-top:6px;opacity:.6">Subí un STL u OBJ para empezar</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTA HISTORIAL -->
+  <div id="view-historial" style="display:none;position:fixed;inset:52px 0 0 0;background:var(--bg);z-index:50;overflow-y:auto;padding:32px;">
+    <div style="max-width:800px;margin:0 auto">
+      <h2 style="font-family:'Inter',sans-serif;font-size:22px;font-weight:700;color:var(--t1);letter-spacing:-.03em;margin-bottom:6px">Historial de proyectos</h2>
+      <p style="font-size:13px;color:var(--t3);margin-bottom:24px">Todos tus proyectos ordenados por fecha</p>
+      <div id="hist-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+  <!-- VISTA CONFIG -->
+  <div id="view-config" style="display:none;position:fixed;inset:52px 0 0 0;background:var(--bg);z-index:50;overflow-y:auto;padding:32px;">
+    <div style="max-width:600px;margin:0 auto">
+      <h2 style="font-family:'Inter',sans-serif;font-size:22px;font-weight:700;color:var(--t1);letter-spacing:-.03em;margin-bottom:24px">Configuración</h2>
+
+      <!-- API Key -->
+      <div style="background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r-lg);padding:20px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px;font-family:'Inter',sans-serif">API Key de Anthropic</div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Necesaria para usar el chat con IA real. Se guarda solo en tu navegador.</div>
+        <div style="display:flex;gap:8px">
+          <input id="configApiKey" type="password" placeholder="sk-ant-..."
+            style="flex:1;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:8px 12px;color:var(--t1);font-family:var(--mono);font-size:12px;outline:none">
+          <button class="tbtn primary" onclick="saveApiKeyFromConfig()"><i class="ti ti-check"></i>Guardar</button>
+        </div>
+        <div id="configKeyStatus" style="font-size:11px;margin-top:8px;color:var(--t3)">Sin configurar</div>
+      </div>
+
+      <!-- Preferencias de impresión -->
+      <div style="background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r-lg);padding:20px;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:12px;font-family:'Inter',sans-serif">Preferencias de impresión</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Altura de capa</label>
+            <select id="cfgLayerH" class="prsel" style="margin-top:0">
+              <option value="0.1">0.10mm — Ultra fino</option>
+              <option value="0.15">0.15mm — Fino</option>
+              <option value="0.2" selected>0.20mm — Normal</option>
+              <option value="0.25">0.25mm — Rápido</option>
+              <option value="0.3">0.30mm — Borrador</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Relleno</label>
+            <select id="cfgInfill" class="prsel" style="margin-top:0">
+              <option value="10">10% — Mínimo</option>
+              <option value="15">15% — Liviano</option>
+              <option value="20" selected>20% — Normal</option>
+              <option value="30">30% — Resistente</option>
+              <option value="50">50% — Sólido</option>
+              <option value="100">100% — Macizo</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Velocidad</label>
+            <select id="cfgSpeed" class="prsel" style="margin-top:0">
+              <option value="30">30mm/s — Calidad</option>
+              <option value="50" selected>50mm/s — Normal</option>
+              <option value="80">80mm/s — Rápido</option>
+              <option value="120">120mm/s — Turbo</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:5px;letter-spacing:1px;text-transform:uppercase">Costo filamento</label>
+            <input id="cfgCostPerG" type="number" value="22" min="1" max="500"
+              style="width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:8px 12px;color:var(--t1);font-family:var(--mono);font-size:12px;outline:none"
+              placeholder="$/g">
+          </div>
+        </div>
+        <button class="tbtn" style="margin-top:14px" onclick="saveConfig()"><i class="ti ti-device-floppy"></i>Guardar preferencias</button>
+      </div>
+
+      <!-- Limpiar datos -->
+      <div style="background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r-lg);padding:20px">
+        <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px;font-family:'Inter',sans-serif">Datos locales</div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:12px">Los proyectos y preferencias se guardan en tu navegador.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="tbtn" onclick="exportAllProjects()"><i class="ti ti-file-export"></i>Exportar todos</button>
+          <button class="tbtn" style="color:var(--err);border-color:rgba(248,113,113,.3)" onclick="clearAllData()"><i class="ti ti-trash"></i>Limpiar todo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /app -->
 
 <script>
@@ -1671,8 +1793,13 @@ async function handleFileUpload(input) {
   } catch (e) {
     clearInterval(iv);
     gen.style.display = 'none';
-    showToast('err', 'ti-x', 'Error al cargar el archivo: ' + e.message);
     console.error(e);
+    showError(
+      'No se pudo cargar el archivo',
+      'El archivo puede estar corrupto o en un formato no compatible.<br>Probá con un STL o OBJ diferente.',
+      'Intentar de nuevo',
+      () => document.getElementById('fup').click()
+    );
   }
 }
 
@@ -1836,7 +1963,8 @@ function drawLayers2D(W, H) {
   const stats = calcModelStats();
   const maxL  = stats ? stats.layers : 80;
   const curL  = Math.min(currentLayerVal, maxL);
-  const layerH = 0.2;
+  const cfg = typeof getConfig === 'function' ? getConfig() : {};
+  const layerH = parseFloat(cfg.layerH || 0.2);
 
   // Si hay modelo real, hacer corte real con plano
   if (modelMesh) {
@@ -2130,21 +2258,82 @@ function drawGenericSupports(W, H) {
 }
 
 function drawPath2D(W, H) {
-  const cx=W/2, cy=H/2, pts=[];
-  for(let i=0;i<220;i++){
-    const t=i/220, layer=Math.floor(i/30);
-    const r=(Math.min(W,H)*.17)+layer*Math.min(W,H)*.022;
-    pts.push([cx+r*Math.cos(t*Math.PI*14), cy+r*Math.sin(t*Math.PI*14)-layer*Math.min(H*.038,20)]);
+  const cx = W/2, cy = H/2;
+
+  if (!modelMesh) {
+    // recorrido genérico
+    const pts = [];
+    for(let i=0;i<220;i++){
+      const t=i/220, layer=Math.floor(i/30);
+      const r=(Math.min(W,H)*.17)+layer*Math.min(W,H)*.022;
+      pts.push([cx+r*Math.cos(t*Math.PI*14), cy+r*Math.sin(t*Math.PI*14)-layer*Math.min(H*.038,20)]);
+    }
+    for(let i=1;i<pts.length;i++){
+      const t=i/pts.length;
+      ctx2d.strokeStyle=`hsl(${220+t*110},80%,60%)`; ctx2d.lineWidth=1.8;
+      ctx2d.beginPath(); ctx2d.moveTo(pts[i-1][0],pts[i-1][1]); ctx2d.lineTo(pts[i][0],pts[i][1]); ctx2d.stroke();
+    }
+    ctx2d.fillStyle='#eceffe'; ctx2d.font=`500 ${Math.round(W*.02)}px Inter,sans-serif`; ctx2d.textAlign='center';
+    ctx2d.fillText('Cargá un modelo para ver el recorrido real', cx, 40);
+    return;
   }
-  for(let i=1;i<pts.length;i++){
-    const t=i/pts.length;
-    ctx2d.strokeStyle=`hsl(${220+t*110},80%,60%)`; ctx2d.lineWidth=1.8;
-    ctx2d.beginPath(); ctx2d.moveTo(pts[i-1][0],pts[i-1][1]); ctx2d.lineTo(pts[i][0],pts[i][1]); ctx2d.stroke();
+
+  // Recorrido real — simular capas de contorno + relleno
+  const box  = new THREE.Box3().setFromObject(modelMesh);
+  const size = box.getSize(new THREE.Vector3());
+  const layerH = 0.2;
+  const totalLayers = Math.ceil(size.y / layerH);
+  const showLayers  = Math.min(12, totalLayers); // mostrar primeras 12 capas
+  const scX = (W * 0.6) / Math.max(size.x, 1);
+  const scZ = (H * 0.55) / Math.max(size.z, 1);
+  const sc  = Math.min(scX, scZ);
+
+  let totalSegments = 0;
+  let totalLength   = 0;
+
+  for (let li = 0; li < showLayers; li++) {
+    const t      = li / showLayers;
+    const sliceY = box.min.y + (li / totalLayers) * size.y + layerH * 0.5;
+    const segs   = [];
+
+    modelMesh.traverse(child => {
+      if (!child.isMesh) return;
+      const geo = child.geometry, pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i += 3) {
+        const v0 = new THREE.Vector3(pos.getX(i),   pos.getY(i),   pos.getZ(i)).applyMatrix4(child.matrixWorld);
+        const v1 = new THREE.Vector3(pos.getX(i+1), pos.getY(i+1), pos.getZ(i+1)).applyMatrix4(child.matrixWorld);
+        const v2 = new THREE.Vector3(pos.getX(i+2), pos.getY(i+2), pos.getZ(i+2)).applyMatrix4(child.matrixWorld);
+        const s  = sliceTriangle(v0, v1, v2, sliceY);
+        if (s) segs.push(s);
+      }
+    });
+
+    if (segs.length === 0) continue;
+
+    // Color por capa — gradiente azul → verde → amarillo
+    const hue = 220 + t * 100;
+    const alpha = 0.6 + t * 0.3;
+    ctx2d.strokeStyle = `hsla(${hue},80%,65%,${alpha})`;
+    ctx2d.lineWidth = li === showLayers - 1 ? 2 : 1.2;
+
+    segs.forEach(([a, b]) => {
+      const ax = cx + a.x * sc, ay = cy - a.z * sc - li * 2;
+      const bx = cx + b.x * sc, by = cy - b.z * sc - li * 2;
+      ctx2d.beginPath(); ctx2d.moveTo(ax, ay); ctx2d.lineTo(bx, by); ctx2d.stroke();
+      totalLength += Math.sqrt((b.x-a.x)**2 + (b.z-a.z)**2);
+    });
+    totalSegments += segs.length;
   }
-  ctx2d.fillStyle='#e8ecff'; ctx2d.font=`500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign='center';
-  ctx2d.fillText('Recorrido de impresión — 7 capas',cx,40);
-  ctx2d.fillStyle='#454d6a'; ctx2d.font=`${Math.round(W*.018)}px Outfit,sans-serif`;
-  ctx2d.fillText('Longitud total estimada: 48.3m | Velocidad: 50mm/s',cx,H-22);
+
+  // Info
+  ctx2d.fillStyle = '#eceffe';
+  ctx2d.font = `600 ${Math.round(W*.02)}px Inter,sans-serif`; ctx2d.textAlign = 'center';
+  ctx2d.fillText(`Recorrido real — ${showLayers} capas de ${totalLayers} totales`, cx, 36);
+
+  ctx2d.fillStyle = '#4a5270';
+  ctx2d.font = `${Math.round(W*.016)}px Inter,sans-serif`;
+  const estMetros = (totalLength * totalLayers / showLayers / 1000).toFixed(1);
+  ctx2d.fillText(`${totalSegments.toLocaleString()} segmentos · Long. estimada: ${estMetros}m`, cx, H - 20);
 }
 
 // ── TOGGLE OPCIONES RENDER ──
@@ -2351,11 +2540,9 @@ async function sendMsg() {
     typingDiv.innerHTML = '<div class="mfrom">PrintAI ✦</div>' + reply.replace(/\n/g, '<br>');
     m.scrollTop = 9999;
 
-    // Si el usuario pidió cambios al modelo, actualizar stats
-    const changeWords = ['grande','chico','escal','reforzá','hollow','vaciá','agrandá','achicá','redond'];
-    if (changeWords.some(w => txt.toLowerCase().includes(w))) {
-      setTimeout(() => refreshStats(), 500);
-    }
+    // Aplicar cambios reales al modelo según el comando
+    applyModelCommand(txt.toLowerCase(), reply);
+    setTimeout(() => refreshStats(), 500);
 
   } catch (err) {
     typingDiv.innerHTML = '<div class="mfrom">PrintAI</div><span style="color:var(--err)">Error: ' + err.message + '</span>';
@@ -2747,7 +2934,7 @@ function calcModelStats() {
   // volumen aproximado (bounding box * factor de relleno)
   const bboxVol   = size.x * size.y * size.z;          // mm³
   const solidVol  = bboxVol * 0.18;                     // estimado ~18% del bbox
-  const infillPct = 0.20;
+  const infillPct = parseFloat((typeof getConfig === 'function' ? getConfig() : {}).infill || 20) / 100;
   const shellMM   = 1.2;
   const shellVol  = (size.x * size.z * shellMM * 2 + size.x * size.y * shellMM * 2) * 0.001;
   const printVol  = solidVol * infillPct + shellVol;    // cm³
@@ -3069,8 +3256,7 @@ let projectToDelete = null;
 
 // Generar thumbnail del canvas
 function getThumbnail(){
-  const cv = document.getElementById('c3d');
-  try { return cv.toDataURL('image/jpeg', 0.6); } catch(e){ return null; }
+  try { if(renderer) return renderer.domElement.toDataURL('image/jpeg', 0.6); return null; } catch(e){ return null; }
 }
 
 // ════════════════════════════════════════════════
@@ -3453,6 +3639,520 @@ document.addEventListener('keydown', e => {
   }
 });
 </script>
+
+
+// ════════════════════════════════════════════════
+//  COMANDOS DE CHAT → CAMBIOS REALES AL MODELO
+// ════════════════════════════════════════════════
+const MATERIALS = {
+  pla:   { name:'PLA',      density:1.24, nozzle:215, bed:60,  color:0x6366f1 },
+  'pla+':{ name:'PLA+',     density:1.24, nozzle:220, bed:65,  color:0x818cf8 },
+  petg:  { name:'PETG',     density:1.27, nozzle:235, bed:80,  color:0x10d9a0 },
+  abs:   { name:'ABS',      density:1.05, nozzle:245, bed:100, color:0xfbbf24 },
+  asa:   { name:'ASA',      density:1.07, nozzle:250, bed:100, color:0xf87171 },
+  tpu:   { name:'TPU',      density:1.21, nozzle:225, bed:45,  color:0xa78bfa },
+  resin: { name:'Resina',   density:1.10, nozzle:0,   bed:0,   color:0x38bdf8 },
+  silk:  { name:'Seda PLA', density:1.24, nozzle:215, bed:60,  color:0xffd700 },
+};
+let currentMaterial = 'pla';
+
+function onMaterialChange(val) {
+  currentMaterial = val;
+  const mat = MATERIALS[val];
+  if (!mat) return;
+
+  // Cambiar color del modelo
+  if (modelMesh) {
+    modelMesh.traverse(child => {
+      if (child.isMesh) child.material.color.setHex(mat.color);
+    });
+  }
+
+  // Mostrar propiedades del material
+  const props = document.getElementById('matProps');
+  if (props) {
+    const tags = [
+      { label: mat.nozzle > 0 ? mat.nozzle + '°C' : 'UV', color: 'var(--err)' },
+      { label: mat.bed > 0 ? mat.bed + '°C cama' : '—', color: 'var(--warn)' },
+      { label: mat.density + ' g/cm³', color: 'var(--ok)' },
+    ];
+    props.innerHTML = tags.map(t =>
+      `<span style="font-size:10px;padding:3px 8px;border-radius:20px;background:var(--bg4);border:1px solid var(--b2);color:${t.color};font-family:'Inter',sans-serif;font-weight:600">${t.label}</span>`
+    ).join('');
+  }
+
+  // Recalcular stats con nueva densidad
+  refreshStats();
+  showToast('ok', 'ti-droplet', 'Material: ' + mat.name);
+}
+
+function applyModelCommand(txt, aiReply) {
+  if (!modelMesh) return;
+  saveUndoState();
+
+  let changed = false;
+
+  // Escalar
+  if (/m.s grande|agrand|escal.*125|125%/.test(txt)) {
+    modelMesh.scale.multiplyScalar(1.25); changed = true;
+    showToast('ok','ti-arrows-diagonal','Escala +25%');
+  } else if (/m.s chico|achic|reduci|escal.*75|75%/.test(txt)) {
+    modelMesh.scale.multiplyScalar(0.75); changed = true;
+    showToast('ok','ti-arrows-diagonal','Escala -25%');
+  } else if (/20%/.test(txt) && /grand|escal/.test(txt)) {
+    modelMesh.scale.multiplyScalar(1.20); changed = true;
+    showToast('ok','ti-arrows-diagonal','Escala +20%');
+  } else if (/grande/.test(txt)) {
+    modelMesh.scale.multiplyScalar(1.15); changed = true;
+    showToast('ok','ti-arrows-diagonal','Escala +15%');
+  } else if (/chico|peque/.test(txt)) {
+    modelMesh.scale.multiplyScalar(0.85); changed = true;
+    showToast('ok','ti-arrows-diagonal','Escala -15%');
+  }
+
+  // Rotar
+  if (/rotar? 90|90.*grado/.test(txt)) {
+    modelMesh.rotation.y += Math.PI / 2; changed = true;
+    showToast('ok','ti-rotate-clockwise','Rotado 90°');
+  } else if (/rotar? 45|45.*grado/.test(txt)) {
+    modelMesh.rotation.y += Math.PI / 4; changed = true;
+    showToast('ok','ti-rotate-clockwise','Rotado 45°');
+  } else if (/rotar? 180|180.*grado/.test(txt)) {
+    modelMesh.rotation.y += Math.PI; changed = true;
+    showToast('ok','ti-rotate-clockwise','Rotado 180°');
+  }
+
+  // Orientar para impresión (poner base abajo)
+  if (/orient|optimiz.*orient|base abajo/.test(txt)) {
+    modelMesh.rotation.set(0, modelMesh.rotation.y, 0);
+    // posicionar sobre la cama
+    const box = new THREE.Box3().setFromObject(modelMesh);
+    modelMesh.position.y -= box.min.y;
+    changed = true;
+    showToast('ok','ti-orientation','Orientación optimizada para impresión');
+  }
+
+  // Centrar
+  if (/centr/.test(txt)) {
+    const box = new THREE.Box3().setFromObject(modelMesh);
+    const center = box.getCenter(new THREE.Vector3());
+    modelMesh.position.sub(center);
+    modelMesh.position.y = 0;
+    changed = true;
+    showToast('ok','ti-maximize','Modelo centrado');
+  }
+
+  // Encuadrar cámara
+  if (/encuadr|ver completo|zoom.*fit|fit/.test(txt)) {
+    fitModel();
+    changed = true;
+  }
+
+  // Cambiar material desde el chat
+  const matWords = {
+    'pla\+': 'pla+', petg:'petg', abs:'abs', asa:'asa',
+    tpu:'tpu', resina:'resin', seda:'silk', pla:'pla'
+  };
+  for (const [word, mat] of Object.entries(matWords)) {
+    if (new RegExp(word,'i').test(txt)) {
+      const sel = document.getElementById('materialSelect');
+      if (sel) { sel.value = mat; onMaterialChange(mat); changed = true; break; }
+    }
+  }
+
+  // Wireframe desde chat
+  if (/wireframe|malla|aristas/.test(txt)) {
+    const btn = document.getElementById('btn-solido');
+    if (btn) btn.click(); changed = true;
+  }
+
+  if (changed) {
+    setTimeout(() => refreshStats(), 300);
+    if (curMode !== '3d') setMode('3d', document.querySelector('.btab'));
+  }
+}
+
+// ════════════════════════════════════════════════
+//  DRAG & DROP al viewport
+// ════════════════════════════════════════════════
+function onDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const vp = document.getElementById('viewport3d');
+  if (vp) {
+    vp.style.outline = '2px dashed var(--acc)';
+    vp.style.outlineOffset = '-8px';
+  }
+}
+function onDragLeave(e) {
+  const vp = document.getElementById('viewport3d');
+  if (vp) { vp.style.outline = ''; vp.style.outlineOffset = ''; }
+}
+function onDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  onDragLeave(e);
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    // Crear un input fake para reutilizar handleFileUpload
+    const fakeInput = { files: files };
+    handleFileUpload(fakeInput);
+  }
+}
+
+// También drag & drop en el sidebar
+const uploadZone = document.getElementById('uploadZone');
+if (uploadZone) {
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor = 'var(--acc)'; });
+  uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = ''; });
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault(); uploadZone.style.borderColor = '';
+    if (e.dataTransfer.files.length) handleFileUpload({ files: e.dataTransfer.files });
+  });
+}
+
+// ════════════════════════════════════════════════
+//  PANTALLA DE ERROR AMIGABLE
+// ════════════════════════════════════════════════
+function showError(title, msg, actionLabel, actionFn) {
+  const wo = document.getElementById('welcomeOverlay');
+  if (!wo) return;
+  wo.style.display = 'flex';
+  wo.innerHTML = `
+    <div style="text-align:center;max-width:420px;padding:24px">
+      <div style="width:64px;height:64px;border-radius:16px;background:var(--err-bg);border:1px solid rgba(248,113,113,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <i class="ti ti-alert-triangle" style="font-size:28px;color:var(--err)"></i>
+      </div>
+      <div style="font-family:'Inter',sans-serif;font-size:18px;font-weight:700;color:var(--t1);margin-bottom:8px">${title}</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:24px">${msg}</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        ${actionLabel ? `<button onclick="(${actionFn.toString()})()" style="background:var(--acc);border:none;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:'Inter',sans-serif">
+          ${actionLabel}
+        </button>` : ''}
+        <button onclick="loadDemoAndClose()" style="background:var(--bg4);border:1px solid var(--b2);border-radius:10px;padding:10px 22px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer;font-family:'Inter',sans-serif">
+          Ver demo
+        </button>
+      </div>
+    </div>`;
+}
+
+// Reemplazar el catch de handleFileUpload con showError
+// (ya está en el catch, llamar showError desde ahí)
+
+// ════════════════════════════════════════════════
+//  INICIALIZACIÓN DEL MATERIAL AL CARGAR
+// ════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  // Inicializar propiedades del material por defecto
+  setTimeout(() => onMaterialChange('pla'), 500);
+});
+
+
+// ════════════════════════════════════════════════
+//  PESTAÑAS DEL TOPBAR
+// ════════════════════════════════════════════════
+const TAB_VIEWS = ['biblioteca','historial','config'];
+
+function switchTab(tab, el) {
+  // actualizar botones
+  document.querySelectorAll('.tt').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+
+  // ocultar todas las vistas overlay
+  TAB_VIEWS.forEach(v => {
+    const el2 = document.getElementById('view-' + v);
+    if (el2) el2.style.display = 'none';
+  });
+
+  if (tab === 'workspace') return; // workspace = el app normal, nada que mostrar
+
+  const view = document.getElementById('view-' + tab);
+  if (!view) return;
+  view.style.display = 'block';
+
+  // Cargar contenido dinámico
+  if (tab === 'historial') loadHistorialView();
+  if (tab === 'biblioteca') loadBibliotecaView();
+  if (tab === 'config') loadConfigView();
+}
+
+// ── HISTORIAL ──
+async function loadHistorialView() {
+  const container = document.getElementById('hist-list');
+  if (!container) return;
+  let proyectos = [];
+  try { proyectos = await dbGetAll(); } catch(e) {}
+  proyectos.sort((a,b) => new Date(b.modificado||b.fecha) - new Date(a.modificado||a.fecha));
+
+  if (proyectos.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--t3)">
+      <i class="ti ti-clock" style="font-size:36px;display:block;margin-bottom:10px;opacity:.4"></i>
+      <p>No hay proyectos en el historial</p></div>`;
+    return;
+  }
+
+  container.innerHTML = proyectos.map(p => {
+    const mat = MATERIALS[p.material?.toLowerCase()] || MATERIALS['pla'];
+    const score = p.validacion?.score || '—';
+    const scoreColor = score > 75 ? 'var(--ok)' : score > 50 ? 'var(--warn)' : 'var(--err)';
+    return `
+    <div style="background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r-lg);padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s"
+      onmouseover="this.style.borderColor='var(--acc)';this.style.transform='translateX(3px)'"
+      onmouseout="this.style.borderColor='var(--b2)';this.style.transform=''"
+      onclick="loadProjectAndGo('${p.id}')">
+      ${p.thumbnail
+        ? `<img src="${p.thumbnail}" style="width:52px;height:52px;border-radius:8px;object-fit:cover;border:1px solid var(--b2);flex-shrink:0">`
+        : `<div style="width:52px;height:52px;border-radius:8px;background:var(--bg4);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-box" style="font-size:22px;color:var(--acc2)"></i></div>`
+      }
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600;color:var(--t1);font-family:'Inter',sans-serif;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap">
+          <span>${formatDate(p.modificado||p.fecha)}</span>
+          <span style="color:var(--t4)">·</span>
+          <span>${p.material || 'PLA'}</span>
+          ${p.stats?.filamento ? `<span style="color:var(--t4)">·</span><span>${p.stats.filamento}</span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        ${score !== '—' ? `<div style="font-family:'Inter',sans-serif;font-size:13px;font-weight:700;color:${scoreColor}">${score}<span style="font-size:10px;font-weight:400;color:var(--t3)">/100</span></div>` : ''}
+        <div style="display:flex;gap:5px">
+          <button onclick="event.stopPropagation();duplicateProject('${p.id}')"
+            style="background:var(--bg3);border:1px solid var(--b2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--t2);cursor:pointer;font-family:'Inter',sans-serif;transition:.15s"
+            onmouseover="this.style.borderColor='var(--acc)'" onmouseout="this.style.borderColor='var(--b2)'">
+            <i class="ti ti-copy"></i>
+          </button>
+          <button onclick="event.stopPropagation();askDelete(this,null,event)" data-id="${p.id}" data-nombre="${p.nombre}"
+            style="background:var(--bg3);border:1px solid var(--b2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--err);cursor:pointer;font-family:'Inter',sans-serif;transition:.15s"
+            onmouseover="this.style.borderColor='var(--err)'" onmouseout="this.style.borderColor='var(--b2)'">
+            <i class="ti ti-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function loadProjectAndGo(id) {
+  await loadProject(id);
+  // volver al workspace
+  switchTab('workspace', document.querySelector('.tt'));
+  document.querySelectorAll('.tt')[0].classList.add('on');
+  TAB_VIEWS.forEach(v => {
+    const el = document.getElementById('view-'+v);
+    if (el) el.style.display = 'none';
+  });
+}
+
+// ── DUPLICAR PROYECTO ──
+async function duplicateProject(id) {
+  const proj = await dbGet(id);
+  if (!proj) return;
+  const copy = JSON.parse(JSON.stringify(proj));
+  copy.id       = Date.now().toString();
+  copy.nombre   = proj.nombre + ' (copia)';
+  copy.fecha    = new Date().toISOString();
+  copy.modificado = new Date().toISOString();
+  await dbPut(copy);
+  renderProjectList();
+  loadHistorialView();
+  showToast('ok','ti-copy','Proyecto duplicado');
+}
+
+// ── BIBLIOTECA ──
+async function loadBibliotecaView() {
+  const grid = document.getElementById('biblio-grid');
+  if (!grid) return;
+  let proyectos = [];
+  try { proyectos = await dbGetAll(); } catch(e) {}
+  proyectos.sort((a,b) => new Date(b.modificado||b.fecha) - new Date(a.modificado||a.fecha));
+
+  if (proyectos.length === 0) {
+    grid.innerHTML = `<div style="padding:40px 20px;text-align:center;grid-column:1/-1;color:var(--t3)">
+      <i class="ti ti-box" style="font-size:40px;display:block;margin-bottom:12px;opacity:.4"></i>
+      <p style="font-size:14px">No tenés modelos guardados</p>
+      <p style="font-size:12px;margin-top:6px;opacity:.6">Subí un STL u OBJ para empezar</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = proyectos.map(p => `
+    <div style="background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r-lg);overflow:hidden;cursor:pointer;transition:all .2s"
+      onmouseover="this.style.borderColor='var(--acc)';this.style.transform='translateY(-2px)';this.style.boxShadow='var(--shadow)'"
+      onmouseout="this.style.borderColor='var(--b2)';this.style.transform='';this.style.boxShadow=''"
+      onclick="loadProjectAndGo('${p.id}')">
+      <div style="height:120px;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden">
+        ${p.thumbnail
+          ? `<img src="${p.thumbnail}" style="width:100%;height:100%;object-fit:cover">`
+          : `<i class="ti ti-box" style="font-size:36px;color:var(--acc2);opacity:.5"></i>`
+        }
+      </div>
+      <div style="padding:10px 12px">
+        <div style="font-size:13px;font-weight:600;color:var(--t1);font-family:'Inter',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nombre}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:3px;display:flex;justify-content:space-between">
+          <span>${p.material || 'PLA'}</span>
+          <span>${formatDate(p.modificado||p.fecha)}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── CONFIG ──
+function loadConfigView() {
+  // Cargar API key guardada
+  const saved = localStorage.getItem('printai_apikey') || '';
+  const inp = document.getElementById('configApiKey');
+  if (inp) inp.value = saved;
+  const status = document.getElementById('configKeyStatus');
+  if (status) {
+    if (saved.startsWith('sk-ant-')) {
+      status.textContent = '✓ Configurada y activa';
+      status.style.color = 'var(--ok)';
+    } else {
+      status.textContent = 'Sin configurar — el chat usará respuestas básicas';
+      status.style.color = 'var(--t3)';
+    }
+  }
+
+  // Cargar preferencias guardadas
+  const cfg = JSON.parse(localStorage.getItem('printai_config') || '{}');
+  if (cfg.layerH)  { const el = document.getElementById('cfgLayerH');  if(el) el.value = cfg.layerH; }
+  if (cfg.infill)  { const el = document.getElementById('cfgInfill');  if(el) el.value = cfg.infill; }
+  if (cfg.speed)   { const el = document.getElementById('cfgSpeed');   if(el) el.value = cfg.speed; }
+  if (cfg.costPerG){ const el = document.getElementById('cfgCostPerG');if(el) el.value = cfg.costPerG; }
+}
+
+function saveApiKeyFromConfig() {
+  const val = document.getElementById('configApiKey')?.value.trim();
+  if (!val || !val.startsWith('sk-ant-')) {
+    showToast('err','ti-key','La key debe empezar con sk-ant-');
+    return;
+  }
+  anthropicKey = val;
+  localStorage.setItem('printai_apikey', val);
+  const inp = document.getElementById('apiKeyInput');
+  if (inp) inp.value = val;
+  loadConfigView();
+  showToast('ok','ti-check','API key guardada');
+}
+
+function saveConfig() {
+  const cfg = {
+    layerH:   document.getElementById('cfgLayerH')?.value   || '0.2',
+    infill:   document.getElementById('cfgInfill')?.value   || '20',
+    speed:    document.getElementById('cfgSpeed')?.value    || '50',
+    costPerG: document.getElementById('cfgCostPerG')?.value || '22',
+  };
+  localStorage.setItem('printai_config', JSON.stringify(cfg));
+  showToast('ok','ti-device-floppy','Preferencias guardadas');
+  setTimeout(() => refreshStats(), 300);
+}
+
+function getConfig() {
+  return JSON.parse(localStorage.getItem('printai_config') || '{"layerH":"0.2","infill":"20","speed":"50","costPerG":"22"}');
+}
+
+async function exportAllProjects() {
+  let proyectos = [];
+  try { proyectos = await dbGetAll(); } catch(e) {}
+  if (proyectos.length === 0) { showToast('warn','ti-alert-triangle','No hay proyectos para exportar'); return; }
+  const blob = new Blob([JSON.stringify(proyectos, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'printai-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('ok','ti-file-export',proyectos.length + ' proyectos exportados');
+}
+
+async function clearAllData() {
+  if (!confirm('¿Seguro? Se van a borrar todos los proyectos guardados. Esta acción no se puede deshacer.')) return;
+  try {
+    const proyectos = await dbGetAll();
+    for (const p of proyectos) await dbDelete(p.id);
+    currentProject = null;
+    renderProjectList();
+    loadHistorialView();
+    loadBibliotecaView();
+    showToast('warn','ti-trash','Todos los datos eliminados');
+  } catch(e) { showToast('err','ti-x','Error al limpiar datos'); }
+}
+
+// ════════════════════════════════════════════════
+//  RESETEAR MODELO
+// ════════════════════════════════════════════════
+let originalModelGeo = null;
+let originalModelScale = null;
+let originalModelRot   = null;
+let originalModelPos   = null;
+
+// Guardar estado original al cargar
+const _origLoadGeometry = loadGeometry;
+function loadGeometry(geo, filename) {
+  _origLoadGeometry(geo, filename);
+  // guardar estado original después de cargar
+  setTimeout(() => {
+    if (modelMesh) {
+      originalModelScale = modelMesh.scale.clone();
+      originalModelRot   = modelMesh.rotation.clone();
+      originalModelPos   = modelMesh.position.clone();
+    }
+  }, 100);
+}
+
+function resetModel() {
+  if (!modelMesh) { showToast('warn','ti-alert-triangle','No hay modelo cargado'); return; }
+  saveUndoState();
+  if (originalModelScale) modelMesh.scale.copy(originalModelScale);
+  if (originalModelRot)   modelMesh.rotation.copy(originalModelRot);
+  if (originalModelPos)   modelMesh.position.copy(originalModelPos);
+  setTimeout(() => refreshStats(), 200);
+  showToast('ok','ti-refresh','Modelo reseteado al estado original');
+}
+
+// ════════════════════════════════════════════════
+//  CHAT MEJORADO SIN API KEY
+// ════════════════════════════════════════════════
+// Reemplazar respuestas simuladas con respuestas útiles contextuales
+const smartReplies = {
+  grande:     () => { const s = calcModelStats(); return s ? `Voy a agrandar el modelo un 15%. Actualmente mide ${Math.round(s.size.x)}×${Math.round(s.size.z)}×${Math.round(s.size.y)}mm. Despues del cambio va a medir aprox ${Math.round(s.size.x*1.15)}×${Math.round(s.size.z*1.15)}×${Math.round(s.size.y*1.15)}mm.` : 'Agrandando el modelo 15%.'; },
+  chico:      () => { const s = calcModelStats(); return s ? `Reduciendo el modelo 15%. De ${Math.round(s.size.x)}×${Math.round(s.size.z)}mm a ${Math.round(s.size.x*.85)}×${Math.round(s.size.z*.85)}mm.` : 'Reduciendo el modelo 15%.'; },
+  rotar:      () => 'Aplicando rotacion. Podés especificar el angulo: "rotar 45", "rotar 90" o "rotar 180".',
+  orient:     () => 'Orientando el modelo para minimizar soportes y mejorar la adhesion a la cama.',
+  centrar:    () => 'Centrando el modelo en la cama de impresion.',
+  resistente: () => { const s = calcModelStats(); return `Para mas resistencia recomiendo aumentar el relleno al 30-40% y usar al menos 3 perimetros. El modelo actual tiene un riesgo de fallo estimado de ${s?.riskPct||'—'}%.`; },
+  material:   () => 'Cambia el material en el panel Export → Material de impresion. Cada material tiene propiedades diferentes de resistencia y temperatura.',
+  hollow:     () => 'El vaciado (hollow) reduce el material significativamente. Te recomiendo un grosor de pared de al menos 1.5mm para mantener la resistencia.',
+  soporte:    () => { const s = calcModelStats(); return s ? `El modelo tiene aproximadamente ${s.overhangs} zonas que pueden necesitar soportes. Podés verlo en la pestaña "Soportes".` : 'Revisa la vista de Soportes para ver las zonas que necesitan soportes.'; },
+  tiempo:     () => { const s = calcModelStats(); return s ? `Tiempo estimado de impresion: ${s.tiempoStr}. Con altura de capa 0.15mm seria aprox ${Math.round(s.tiempoMin*1.4)}min. Con 0.30mm seria aprox ${Math.round(s.tiempoMin*.7)}min.` : 'Carga un modelo para ver el tiempo estimado.'; },
+  default:    () => { const s = calcModelStats(); return s ? `El modelo actual mide ${Math.round(s.size.x)}×${Math.round(s.size.z)}×${Math.round(s.size.y)}mm, pesa aprox ${s.filamentoG}g de filamento y tarda ${s.tiempoStr}. Puntuacion de imprimibilidad: ${s.score}/100. ¿Que querés cambiar?` : 'Subi un modelo STL u OBJ para que pueda analizarlo y ayudarte a optimizarlo.'; }
+};
+
+async function simulatedResponse(txt, div, container) {
+  await new Promise(r => setTimeout(r, 600));
+
+  // buscar la respuesta más relevante
+  let reply = null;
+  const t = txt.toLowerCase();
+  if (/grand|agrand/.test(t))      reply = smartReplies.grande();
+  else if (/chico|achic|peque/.test(t)) reply = smartReplies.chico();
+  else if (/rotar|girar/.test(t))  reply = smartReplies.rotar();
+  else if (/orient/.test(t))       reply = smartReplies.orient();
+  else if (/centr/.test(t))        reply = smartReplies.centrar();
+  else if (/resist|fuerte|solido/.test(t)) reply = smartReplies.resistente();
+  else if (/material|filamento/.test(t))   reply = smartReplies.material();
+  else if (/hollow|vaci|hueco/.test(t))    reply = smartReplies.hollow();
+  else if (/soporte|support/.test(t))      reply = smartReplies.soporte();
+  else if (/tiempo|tarda|demora/.test(t))  reply = smartReplies.tiempo();
+  else reply = smartReplies.default();
+
+  // Si no hay API key, agregar sugerencia al final
+  if (!anthropicKey || !anthropicKey.startsWith('sk-ant-')) {
+    reply += '<br><br><span style="font-size:10px;color:var(--t3);font-style:italic">Configura tu API key de Anthropic en Config para respuestas mas detalladas.</span>';
+  }
+
+  div.innerHTML = '<div class="mfrom">PrintAI</div>' + reply;
+  chatHistory.push({ role:'assistant', content: reply.replace(/<[^>]+>/g,'') });
+  container.scrollTop = 9999;
+}
 
 <script>
 // ════════════════════════════════════════════════
