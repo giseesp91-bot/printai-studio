@@ -379,6 +379,21 @@ select.prsel{
   appearance:none;
 }
 
+/* ── TYPING DOTS ── */
+.typing-dots span {
+  animation: tdot 1.2s infinite;
+  display: inline-block;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s }
+.typing-dots span:nth-child(3) { animation-delay: .4s }
+@keyframes tdot { 0%,60%,100%{opacity:1} 30%{opacity:0} }
+
+/* ── API KEY INPUT FOCUS ── */
+#apiKeyInput:focus { border-color: var(--acc) !important; outline: none; }
+
+/* ── EXPORT ITEM CON CURSOR POINTER ── */
+.exitem { cursor: pointer; }
+
 /* ── NOTIFICACIÓN TOAST ── */
 .toast{
   position:fixed;bottom:24px;right:24px;z-index:9999;
@@ -603,6 +618,17 @@ select.prsel{
 
     <!-- IA / CHAT -->
     <div class="rpbody on" id="rp-ia" style="display:flex;flex-direction:column;height:calc(100vh - 52px - 43px)">
+      <!-- API Key config -->
+      <div id="apiKeyBar" style="background:var(--bg3);border:1px solid var(--b2);border-radius:9px;padding:9px 11px;margin-bottom:10px;flex-shrink:0">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">API Key Anthropic <span style="color:var(--warn)" id="apiKeyStatus">— no configurada</span></div>
+        <div style="display:flex;gap:6px">
+          <input id="apiKeyInput" type="password" placeholder="sk-ant-..." 
+            style="flex:1;background:var(--bg4);border:1px solid var(--b2);border-radius:7px;padding:6px 10px;color:var(--t1);font-family:var(--mono);font-size:11px;outline:none;"
+            oninput="checkApiKey(this.value)">
+          <button onclick="saveApiKey()" class="tbtn" style="padding:5px 10px;font-size:11px;flex-shrink:0"><i class="ti ti-check"></i></button>
+        </div>
+        <div style="font-size:10px;color:var(--t3);margin-top:5px">Tu key queda guardada solo en este navegador, nunca sale a internet.</div>
+      </div>
       <div class="sec" style="flex-shrink:0">Comandos rápidos</div>
       <div class="qcmds" style="flex-shrink:0">
         <div class="qc" onclick="sendQ('Hacelo más grande')">+ Grande</div>
@@ -1198,6 +1224,8 @@ function loadGeometry(geo, filename) {
   camTarget.set(0, 0, 0);
 
   showToast('ok', 'ti-3d-cube-sphere', `Modelo "${filename}" cargado`);
+  // calcular stats reales del modelo cargado
+  setTimeout(() => refreshStats(), 300);
 }
 
 async function handleFileUpload(input) {
@@ -1512,39 +1540,184 @@ window.addEventListener('load', () => {
 
 
 // ── CHAT ──
-const replies=[
-  'Aplicado ✓ El modelo sigue siendo imprimible sin soportes extras. Puntuación actualizada: 82/100.',
-  'Entendido. Geometría ajustada correctamente. Verificá la vista 3D para confirmar el resultado.',
-  'Hecho. Recalculé las estimaciones: tiempo +12min, material +2.1g. ¿Querés confirmar o deshacer?',
-  'Cambio aplicado. Detecté un nuevo voladizo pequeño — ¿querés que agregue soporte automático?',
-  'Optimización lista. Ahorrás 15% de filamento manteniendo la misma resistencia estructural.',
-  'Listo. El hollowing redujo el peso de 18.4g a 9.2g. El grosor de pared quedó en 1.8mm.',
-  'Textura aplicada. El patrón aumenta ligeramente el tiempo de impresión (+8min) pero mejora el agarre.',
-  'Orientación optimizada. La pieza girada 15° reduce los soportes de 3 a 1.',
-];
-let ri=0;
-function sendMsg(){
-  const inp=document.getElementById('cin'), txt=inp.value.trim();
-  if(!txt) return;
-  const m=document.getElementById('msgs');
-  const u=document.createElement('div'); u.className='msg me';
-  u.innerHTML='<div class="mfrom">Vos</div>'+txt;
-  m.appendChild(u); inp.value='';
-  inp.style.height='auto';
-  const typingDiv=document.createElement('div'); typingDiv.className='msg ai';
-  typingDiv.innerHTML='<div class="mfrom">PrintAI</div><i>Procesando...</i>';
-  m.appendChild(typingDiv); m.scrollTop=9999;
-  setTimeout(()=>{
-    typingDiv.innerHTML='<div class="mfrom">PrintAI</div>'+replies[ri%replies.length];
-    ri++; m.scrollTop=9999;
-  },700);
+// ════════════════════════════════════════════════
+//  CHAT IA REAL CON ANTHROPIC
+// ════════════════════════════════════════════════
+let anthropicKey = localStorage.getItem('printai_apikey') || '';
+
+function checkApiKey(val) {
+  const status = document.getElementById('apiKeyStatus');
+  if (!status) return;
+  if (val.startsWith('sk-ant-') && val.length > 20) {
+    status.textContent = '— válida';
+    status.style.color = 'var(--ok)';
+  } else if (val.length > 0) {
+    status.textContent = '— formato incorrecto';
+    status.style.color = 'var(--err)';
+  } else {
+    status.textContent = '— no configurada';
+    status.style.color = 'var(--warn)';
+  }
 }
-function sendQ(t){document.getElementById('cin').value=t; sendMsg();}
-document.getElementById('cin').addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-ant-')) {
+    showToast('err','ti-x','La key debe empezar con sk-ant-');
+    return;
+  }
+  anthropicKey = val;
+  localStorage.setItem('printai_apikey', val);
+  checkApiKey(val);
+  showToast('ok','ti-check','API key guardada');
+  // ocultar el campo después de guardar
+  const bar = document.getElementById('apiKeyBar');
+  if (bar) bar.style.display = 'none';
+}
+
+// Cargar key guardada al inicio
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('printai_apikey');
+  if (saved) {
+    anthropicKey = saved;
+    const inp = document.getElementById('apiKeyInput');
+    if (inp) inp.value = saved;
+    checkApiKey(saved);
+    const bar = document.getElementById('apiKeyBar');
+    if (bar && saved.startsWith('sk-ant-')) bar.style.display = 'none';
+  }
 });
-document.getElementById('cin').addEventListener('input',function(){
-  this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,80)+'px';
+
+function buildSystemPrompt() {
+  const stats = calcModelStats();
+  let ctx = `Sos PrintAI, un asistente especializado en impresión 3D integrado en PrintAI Studio.
+Ayudás al usuario a modificar, optimizar y validar modelos 3D para impresión.
+Respondé siempre en español rioplatense, de forma clara y concisa (máximo 3 párrafos).
+Cuando el usuario pida cambios al modelo, describí exactamente qué harías y cómo afecta la imprimibilidad.
+Siempre considerá: grosor mínimo de paredes (1.2mm), voladizos máximos (45°), adhesión a la cama, soportes necesarios.`;
+
+  if (stats) {
+    ctx += `
+
+MODELO ACTUAL CARGADO:
+- Dimensiones: ${Math.round(stats.size.x)} × ${Math.round(stats.size.z)} × ${Math.round(stats.size.y)} mm
+- Triángulos: ${stats.triCount.toLocaleString()}
+- Filamento estimado: ${stats.filamentoG}g
+- Tiempo estimado: ${stats.tiempoStr}
+- Capas: ${stats.layers} (altura 0.20mm)
+- Soportes estimados: ${stats.overhangs}
+- Riesgo de fallo: ${stats.riskPct}%
+- Puntuación imprimibilidad: ${stats.score}/100
+- Pared mínima estimada: ${stats.minWall}mm`;
+  } else {
+    ctx += '
+
+No hay modelo cargado actualmente. Podés pedirle al usuario que suba un STL u OBJ.';
+  }
+  return ctx;
+}
+
+let chatHistory = [];
+
+async function sendMsg() {
+  const inp = document.getElementById('cin');
+  const txt = inp.value.trim();
+  if (!txt) return;
+
+  const m = document.getElementById('msgs');
+  const u = document.createElement('div');
+  u.className = 'msg me';
+  u.innerHTML = '<div class="mfrom">Vos</div>' + txt;
+  m.appendChild(u);
+  inp.value = '';
+  inp.style.height = 'auto';
+  m.scrollTop = 9999;
+
+  chatHistory.push({ role: 'user', content: txt });
+
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg ai';
+  typingDiv.innerHTML = '<div class="mfrom">PrintAI</div><span class="typing-dots">Pensando<span>.</span><span>.</span><span>.</span></span>';
+  m.appendChild(typingDiv);
+  m.scrollTop = 9999;
+
+  // Si no hay API key, respuesta simulada inteligente
+  if (!anthropicKey || !anthropicKey.startsWith('sk-ant-')) {
+    await simulatedResponse(txt, typingDiv, m);
+    return;
+  }
+
+  // IA real con Anthropic
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: buildSystemPrompt(),
+        messages: chatHistory.slice(-10) // últimos 10 mensajes
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        showToast('err','ti-key','API key inválida — verificala');
+        localStorage.removeItem('printai_apikey');
+        document.getElementById('apiKeyBar').style.display = 'block';
+      }
+      throw new Error(err.error?.message || 'Error ' + response.status);
+    }
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'No pude generar una respuesta.';
+    chatHistory.push({ role: 'assistant', content: reply });
+
+    typingDiv.innerHTML = '<div class="mfrom">PrintAI ✦</div>' + reply.replace(/\n/g, '<br>');
+    m.scrollTop = 9999;
+
+    // Si el usuario pidió cambios al modelo, actualizar stats
+    const changeWords = ['grande','chico','escal','reforzá','hollow','vaciá','agrandá','achicá','redond'];
+    if (changeWords.some(w => txt.toLowerCase().includes(w))) {
+      setTimeout(() => refreshStats(), 500);
+    }
+
+  } catch (err) {
+    typingDiv.innerHTML = '<div class="mfrom">PrintAI</div><span style="color:var(--err)">Error: ' + err.message + '</span>';
+    console.error('IA error:', err);
+  }
+  m.scrollTop = 9999;
+}
+
+// Respuestas simuladas cuando no hay API key
+const respuestasSim = [
+  'Para usar la IA real necesitás configurar tu API key de Anthropic arriba. Sin ella puedo darte respuestas básicas.<br><br>Basándome en el modelo actual, todo parece estar bien para imprimir.',
+  '⚠️ Sin API key activa. Configurala arriba para respuestas inteligentes.<br><br>Para ese cambio te recomiendo revisar los soportes en la vista "Soportes" de la barra inferior.',
+  'Configurá tu API key de Anthropic para que pueda analizar tu modelo en detalle y hacer sugerencias reales.',
+];
+let simIdx = 0;
+
+async function simulatedResponse(txt, div, container) {
+  await new Promise(r => setTimeout(r, 800));
+  div.innerHTML = '<div class="mfrom">PrintAI</div>' + respuestasSim[simIdx % respuestasSim.length];
+  simIdx++;
+  container.scrollTop = 9999;
+}
+
+function sendQ(t) { document.getElementById('cin').value = t; sendMsg(); }
+
+document.getElementById('cin').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+document.getElementById('cin').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 80) + 'px';
 });
 
 // loop — solo redibuja cuando hay interacción
