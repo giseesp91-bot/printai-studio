@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintAI Studio</title>
+<link rel="manifest" href="printai-manifest.json">
+<meta name="theme-color" content="#080a0e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080a0e;
+  --bg2:#0e1116;
+  --bg3:#13161c;
+  --bg4:#1a1e27;
+  --bg5:#222636;
+  --b1:#ffffff0d;
+  --b2:#ffffff18;
+  --b3:#ffffff30;
+  --t1:#e8ecff;
+  --t2:#8891b0;
+  --t3:#454d6a;
+  --acc:#5b6cf9;
+  --acc2:#7c8bff;
+  --acc3:#b8c0ff;
+  --ok:#1fd6a0;
+  --warn:#f5c842;
+  --err:#f55757;
+  --info:#42b4f5;
+  --fnt:'Outfit',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html,body{
+  height:100vh;overflow:hidden;
+  font-family:var(--fnt);
+  background:var(--bg);
+  color:var(--t1);
+  user-select:none;
+}
+
+/* ── APP SHELL ── */
+.app{
+  display:grid;
+  grid-template-rows:52px 1fr;
+  grid-template-columns:56px 220px 1fr 300px;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar{
+  grid-column:1/-1;
+  background:var(--bg2);
+  border-bottom:1px solid var(--b2);
+  display:flex;align-items:center;
+  padding:0 20px;gap:0;
+}
+.logo{display:flex;align-items:center;gap:10px;margin-right:32px;flex-shrink:0;text-decoration:none}
+.logo-mark{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--acc);display:flex;align-items:center;justify-content:center;
+}
+.logo-mark i{font-size:18px;color:#fff}
+.logo-name{font-size:16px;font-weight:700;letter-spacing:-.4px;color:var(--t1)}
+.logo-name span{color:var(--acc2)}
+.top-tabs{display:flex;gap:0;margin-right:auto}
+.tt{
+  font-size:13px;font-weight:500;padding:0 16px;height:52px;
+  display:flex;align-items:center;color:var(--t3);cursor:pointer;
+  border-bottom:2px solid transparent;transition:.15s;gap:7px;
+  background:none;border-left:none;border-right:none;border-top:none;
+  font-family:var(--fnt);
+}
+.tt i{font-size:15px}
+.tt:hover{color:var(--t2)}
+.tt.on{color:var(--acc2);border-bottom-color:var(--acc)}
+.top-right{display:flex;align-items:center;gap:10px}
+.ia-badge{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;
+  background:rgba(31,214,160,.08);border:1px solid rgba(31,214,160,.2);
+  border-radius:20px;font-size:12px;color:var(--ok);font-weight:500;
+}
+.ia-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tbtn{
+  background:var(--bg3);border:1px solid var(--b2);border-radius:8px;
+  padding:6px 14px;font-size:12px;font-weight:500;color:var(--t2);
+  cursor:pointer;font-family:var(--fnt);transition:.15s;
+  display:flex;align-items:center;gap:7px;
+}
+.tbtn i{font-size:15px}
+.tbtn:hover{background:var(--bg4);color:var(--t1);border-color:var(--b3)}
+.tbtn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.tbtn.primary:hover{background:var(--acc2)}
+
+/* ── ICON BAR ── */
+.iconbar{
+  background:var(--bg2);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;align-items:center;
+  padding:12px 0;gap:4px;overflow:hidden;
+}
+.ib{
+  width:40px;height:40px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.15s;color:var(--t3);font-size:20px;
+  border:1px solid transparent;position:relative;
+}
+.ib:hover{background:var(--bg3);color:var(--t2)}
+.ib.on{background:var(--bg4);color:var(--acc2);border-color:var(--b2)}
+.ib[data-tip]:hover::after{
+  content:attr(data-tip);
+  position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  background:var(--bg4);border:1px solid var(--b2);
+  padding:4px 10px;border-radius:6px;font-size:11px;color:var(--t1);
+  white-space:nowrap;font-family:var(--fnt);pointer-events:none;z-index:100;
+}
+.ib-sep{width:30px;height:1px;background:var(--b1);margin:6px 0}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:var(--bg2);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-head{padding:14px 14px 10px;flex-shrink:0}
+.sb-label{
+  font-size:9px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--t3);margin-bottom:10px;
+}
+.upload-zone{
+  border:1.5px dashed var(--b2);border-radius:11px;
+  padding:20px 10px;text-align:center;cursor:pointer;
+  transition:.2s;background:var(--bg3);
+}
+.upload-zone:hover{border-color:var(--acc);background:rgba(91,108,249,.07)}
+.upload-zone i{font-size:26px;color:var(--acc);display:block;margin-bottom:8px}
+.upload-zone p{font-size:12px;color:var(--t2);line-height:1.5;font-weight:500}
+.upload-zone small{font-size:10px;color:var(--t3)}
+.sb-section{padding:8px 14px 4px;flex-shrink:0}
+.sb-scroll{flex:1;overflow-y:auto;padding:4px 8px 10px}
+.sb-scroll::-webkit-scrollbar{width:3px}
+.sb-scroll::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
+.proj{
+  display:flex;align-items:center;gap:9px;padding:8px 7px;
+  border-radius:9px;cursor:pointer;transition:.15s;margin-bottom:2px;
+  border:1px solid transparent;
+}
+.proj:hover{background:var(--bg3)}
+.proj.on{background:var(--bg4);border-color:var(--b2)}
+.proj-ico{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--bg4);border:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.proj-name{font-size:12px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:128px}
+.proj-time{font-size:10px;color:var(--t3);margin-top:1px}
+.proj-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-left:auto}
+
+/* ── CENTER ── */
+.center{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0}
+
+.vp-wrap{flex:1;position:relative;overflow:hidden}
+#viewport3d canvas{display:block;width:100%!important;height:100%!important;}
+
+.vp-tbar{
+  position:absolute;top:12px;left:12px;
+  display:flex;gap:6px;z-index:10;
+}
+.vpbtn{
+  background:rgba(14,17,22,.85);border:1px solid var(--b2);
+  border-radius:8px;padding:6px 12px;font-size:11px;font-weight:500;
+  color:var(--t2);cursor:pointer;font-family:var(--fnt);transition:.15s;
+  display:flex;align-items:center;gap:5px;backdrop-filter:blur(6px);
+}
+.vpbtn i{font-size:14px}
+.vpbtn:hover{border-color:var(--b3);color:var(--t1)}
+.vpbtn.on{border-color:var(--acc);color:var(--acc2)}
+
+.vp-info{
+  position:absolute;top:12px;right:12px;
+  display:flex;flex-direction:column;gap:6px;align-items:flex-end;z-index:10;
+}
+.vpchip{
+  background:rgba(14,17,22,.85);border:1px solid var(--b1);
+  border-radius:7px;padding:5px 11px;font-size:11px;color:var(--t2);
+  display:flex;align-items:center;gap:6px;backdrop-filter:blur(6px);
+  font-family:var(--mono);
+}
+.vpchip i{font-size:13px;color:var(--acc2)}
+
+.vp-views{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;background:rgba(14,17,22,.9);border:1px solid var(--b2);
+  border-radius:22px;padding:5px;backdrop-filter:blur(8px);z-index:10;gap:2px;
+}
+.vview{
+  font-size:12px;font-weight:500;padding:5px 14px;
+  border-radius:16px;color:var(--t3);cursor:pointer;transition:.15s;
+  font-family:var(--fnt);
+}
+.vview:hover{color:var(--t2);background:var(--bg3)}
+.vview.on{background:var(--bg4);color:var(--acc2)}
+
+.vp-generating{
+  position:absolute;inset:0;background:rgba(8,10,14,.88);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:20;gap:16px;backdrop-filter:blur(4px);
+}
+.gen-ring{
+  width:64px;height:64px;border-radius:50%;
+  border:3px solid var(--bg4);border-top-color:var(--acc);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-txt{font-size:14px;color:var(--t2);font-weight:500}
+.gen-sub{font-size:12px;color:var(--t3)}
+
+/* ── BOTTOM TABS ── */
+.bbar{
+  height:46px;background:var(--bg2);border-top:1px solid var(--b1);
+  display:flex;align-items:center;flex-shrink:0;
+}
+.btab{
+  display:flex;align-items:center;gap:7px;padding:0 16px;height:46px;
+  font-size:12px;font-weight:500;color:var(--t3);cursor:pointer;
+  border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;
+  flex-shrink:0;
+}
+.btab i{font-size:15px}
+.btab:hover{color:var(--t2)}
+.btab.on{color:var(--acc2);border-bottom-color:var(--acc)}
+.btab .wcnt{
+  font-size:9px;background:var(--warn);color:#000;
+  padding:1px 6px;border-radius:8px;font-weight:700;
+}
+.bbar-right{margin-left:auto;display:flex;align-items:center;padding:0 16px;gap:18px}
+.bstat{font-size:11px;color:var(--t3)}
+.bstat b{color:var(--t2)}
+
+/* ── RIGHT PANEL ── */
+.rpanel{
+  background:var(--bg2);border-left:1px solid var(--b1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.rptabs{
+  display:flex;background:var(--bg3);border-bottom:1px solid var(--b1);flex-shrink:0;
+}
+.rptab{
+  flex:1;padding:10px 0;text-align:center;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;color:var(--t3);cursor:pointer;
+  border-bottom:2px solid transparent;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.rptab i{font-size:14px}
+.rptab:hover{color:var(--t2)}
+.rptab.on{color:var(--acc2);border-bottom-color:var(--acc);background:var(--bg2)}
+
+.rpbody{flex:1;overflow-y:auto;padding:14px;display:none}
+.rpbody.on{display:block}
+.rpbody::-webkit-scrollbar{width:4px}
+.rpbody::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:4px}
+
+/* ── COMPONENTS ── */
+.sec{
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--t3);margin-bottom:10px;margin-top:16px;
+}
+.sec:first-child{margin-top:0}
+
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.statcard{
+  background:var(--bg3);border:1px solid var(--b1);border-radius:10px;padding:12px 13px;
+}
+.statcard .v{font-family:var(--mono);font-size:19px;font-weight:500;color:var(--t1);line-height:1}
+.statcard .l{font-size:9px;color:var(--t3);margin-top:5px;letter-spacing:1px;text-transform:uppercase}
+.statcard .icon{font-size:16px;color:var(--t3);margin-bottom:4px;display:block}
+
+.chk{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid var(--b1);
+}
+.chk:last-child{border:none}
+.chl{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--t2)}
+.chl i{font-size:16px;color:var(--t3)}
+.badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.4px}
+.bok{background:rgba(31,214,160,.12);color:var(--ok)}
+.bwarn{background:rgba(245,200,66,.12);color:var(--warn)}
+.berr{background:rgba(245,87,87,.12);color:var(--err)}
+
+.scorewrap{
+  display:flex;gap:12px;align-items:center;
+  background:var(--bg3);border:1px solid var(--b1);
+  border-radius:11px;padding:13px 15px;margin-bottom:14px;
+}
+.scorering{position:relative;width:52px;height:52px;flex-shrink:0}
+.scorering svg{transform:rotate(-90deg)}
+.scoren{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:15px;font-weight:500;color:var(--ok);
+}
+.scoretxt p{font-size:14px;font-weight:600;color:var(--t1)}
+.scoretxt span{font-size:11px;color:var(--t3)}
+
+.witem{
+  display:flex;gap:8px;padding:8px 10px;border-radius:9px;
+  font-size:12px;line-height:1.5;margin-bottom:6px;
+}
+.w-ok{background:rgba(31,214,160,.08);border:1px solid rgba(31,214,160,.2);color:var(--ok)}
+.w-w{background:rgba(245,200,66,.08);border:1px solid rgba(245,200,66,.2);color:var(--warn)}
+.w-e{background:rgba(245,87,87,.08);border:1px solid rgba(245,87,87,.2);color:var(--err)}
+.witem i{font-size:14px;flex-shrink:0;margin-top:2px}
+
+.riskbar{height:6px;background:var(--bg4);border-radius:3px;margin-bottom:14px;overflow:hidden}
+.riskfill{height:100%;border-radius:3px;transition:width .7s}
+
+/* chat */
+.qcmds{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.qc{
+  font-size:11px;padding:5px 10px;border:1px solid var(--b2);
+  border-radius:13px;background:var(--bg3);color:var(--t2);cursor:pointer;
+  transition:.15s;font-family:var(--fnt);
+}
+.qc:hover{border-color:var(--acc);color:var(--acc2);background:rgba(91,108,249,.08)}
+.msgs{
+  flex:1;overflow-y:auto;display:flex;flex-direction:column;
+  gap:8px;margin-bottom:10px;min-height:0;
+}
+.msgs::-webkit-scrollbar{width:3px}
+.msgs::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
+.msg{padding:9px 12px;border-radius:10px;font-size:12px;line-height:1.55;max-width:95%}
+.msg.ai{background:var(--bg3);border:1px solid var(--b1);color:var(--t2);align-self:flex-start}
+.msg.me{
+  background:rgba(91,108,249,.15);border:1px solid rgba(91,108,249,.28);
+  color:var(--acc3);align-self:flex-end;
+}
+.mfrom{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;opacity:.5}
+.cinwrap{
+  border-top:1px solid var(--b1);padding-top:10px;
+  display:flex;gap:7px;align-items:flex-end;flex-shrink:0;
+}
+.cin{
+  flex:1;background:var(--bg3);border:1px solid var(--b2);
+  border-radius:9px;padding:8px 12px;color:var(--t1);
+  font-family:var(--fnt);font-size:13px;resize:none;outline:none;
+  transition:.15s;line-height:1.5;max-height:80px;min-height:36px;
+}
+.cin:focus{border-color:var(--acc)}
+.cin::placeholder{color:var(--t3)}
+.csend{
+  background:var(--acc);border:none;border-radius:9px;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:#fff;transition:.15s;flex-shrink:0;font-size:18px;
+}
+.csend:hover{background:var(--acc2);transform:scale(1.05)}
+.csend i{font-size:17px}
+
+/* export */
+.exitem{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--bg3);border:1px solid var(--b1);
+  border-radius:10px;cursor:pointer;transition:.2s;margin-bottom:8px;
+}
+.exitem:hover{border-color:var(--acc);background:rgba(91,108,249,.08)}
+.exl{display:flex;align-items:center;gap:11px}
+.exl i{font-size:22px;color:var(--acc2)}
+.exname{font-size:13px;font-weight:600;color:var(--t1)}
+.exdesc{font-size:10px;color:var(--t3);margin-top:2px}
+.exdl{font-size:17px;color:var(--t3)}
+select.prsel{
+  width:100%;background:var(--bg3);border:1px solid var(--b2);
+  border-radius:9px;padding:9px 13px;color:var(--t1);
+  font-family:var(--fnt);font-size:13px;cursor:pointer;outline:none;margin-top:6px;
+  appearance:none;
+}
+
+/* ── NOTIFICACIÓN TOAST ── */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--bg4);border:1px solid var(--b2);
+  border-radius:10px;padding:12px 18px;
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;color:var(--t1);
+  transform:translateY(80px);opacity:0;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none;max-width:320px;
+}
+.toast.show{transform:translateY(0);opacity:1;pointer-events:auto}
+.toast i{font-size:18px}
+.toast.ok i{color:var(--ok)}
+.toast.warn i{color:var(--warn)}
+.toast.err i{color:var(--err)}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:1000;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--bg2);border:1px solid var(--b2);border-radius:14px;
+  padding:24px;min-width:360px;max-width:480px;width:90%;
+  transform:scale(.95);transition:transform .2s;
+}
+.modal-overlay.show .modal{transform:scale(1)}
+.modal-title{font-size:16px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--t3);margin-bottom:20px}
+.modal-input{
+  width:100%;background:var(--bg3);border:1px solid var(--b2);
+  border-radius:8px;padding:10px 13px;color:var(--t1);
+  font-family:var(--fnt);font-size:14px;outline:none;margin-bottom:16px;
+}
+.modal-input:focus{border-color:var(--acc)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.modal-btn{
+  padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--fnt);border:1px solid var(--b2);
+  background:var(--bg3);color:var(--t2);transition:.15s;
+}
+.modal-btn:hover{background:var(--bg4);color:var(--t1)}
+.modal-btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.modal-btn.primary:hover{background:var(--acc2)}
+.modal-btn.danger{background:rgba(245,87,87,.12);border-color:rgba(245,87,87,.3);color:var(--err)}
+
+/* ── BARRA INSTALACIÓN ── */
+.install-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:var(--bg2);border-top:1px solid var(--b2);
+  padding:12px 24px;display:flex;align-items:center;gap:14px;
+  transform:translateY(100%);transition:transform .3s ease;
+}
+.install-bar.show{transform:translateY(0)}
+.install-bar p{font-size:13px;color:var(--t2);flex:1}
+.install-bar p b{color:var(--t1)}
+.install-bar-btn{
+  padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;
+  cursor:pointer;font-family:var(--fnt);border:none;
+  background:var(--acc);color:#fff;transition:.15s;
+}
+.install-bar-btn:hover{background:var(--acc2)}
+.install-bar-close{
+  background:none;border:none;color:var(--t3);cursor:pointer;font-size:20px;padding:4px;
+}
+
+/* ── PROYECTO ITEM MEJORADO ── */
+.proj-menu{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--t3);font-size:16px;
+  cursor:pointer;opacity:0;transition:.15s;padding:4px;border-radius:5px;
+}
+.proj:hover .proj-menu{opacity:1}
+.proj-menu:hover{background:var(--bg5);color:var(--t1)}
+.proj{position:relative}
+</style>
+  <!-- Three.js r128 desde CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a class="logo" href="#">
+      <div class="logo-mark"><i class="ti ti-3d-cube-sphere"></i></div>
+      <div class="logo-name">Print<span>AI</span> Studio</div>
+    </a>
+    <div class="top-tabs">
+      <button class="tt on" onclick="activeTT(this)"><i class="ti ti-layout-dashboard"></i>Workspace</button>
+      <button class="tt" onclick="activeTT(this)"><i class="ti ti-books"></i>Biblioteca</button>
+      <button class="tt" onclick="activeTT(this)"><i class="ti ti-clock-hour-3"></i>Historial</button>
+      <button class="tt" onclick="activeTT(this)"><i class="ti ti-settings"></i>Config</button>
+    </div>
+    <div class="top-right">
+      <button class="tbtn" onclick="openModal('modalHelp')" title="Ayuda de instalación">
+        <i class="ti ti-help"></i>Cómo instalar
+      </button>
+      <div class="ia-badge"><div class="ia-dot"></div>IA activa — GPT-4o</div>
+      <button class="tbtn" onclick="openProject()"><i class="ti ti-folder-open"></i>Abrir</button>
+      <button class="tbtn" onclick="openModal('modalSave')"><i class="ti ti-device-floppy"></i>Guardar</button>
+      <button class="tbtn primary" onclick="showExport()"><i class="ti ti-printer"></i>Exportar</button>
+    </div>
+  </div>
+
+  <!-- ICON BAR -->
+  <div class="iconbar">
+    <div class="ib on" data-tip="Herramienta principal" onclick="selIb(this)"><i class="ti ti-vector-bezier"></i></div>
+    <div class="ib" data-tip="Selección" onclick="selIb(this)"><i class="ti ti-pointer"></i></div>
+    <div class="ib" data-tip="Mover" onclick="selIb(this)"><i class="ti ti-arrows-move"></i></div>
+    <div class="ib" data-tip="Escalar" onclick="selIb(this)"><i class="ti ti-arrows-diagonal"></i></div>
+    <div class="ib" data-tip="Rotar" onclick="selIb(this)"><i class="ti ti-rotate-clockwise"></i></div>
+    <div class="ib-sep"></div>
+    <div class="ib" data-tip="Corte transversal" onclick="selIb(this)"><i class="ti ti-cut"></i></div>
+    <div class="ib" data-tip="Editor de malla" onclick="selIb(this)"><i class="ti ti-topology-star-3"></i></div>
+    <div class="ib" data-tip="Medidas" onclick="selIb(this)"><i class="ti ti-ruler-measure"></i></div>
+    <div class="ib-sep"></div>
+    <div class="ib" data-tip="Ver capas" onclick="selIb(this)"><i class="ti ti-layers-intersect"></i></div>
+    <div class="ib" data-tip="Ver relleno" onclick="selIb(this)"><i class="ti ti-grid-dots"></i></div>
+    <div class="ib-sep"></div>
+    <div class="ib" data-tip="Zoom encuadrar" onclick="selIb(this)"><i class="ti ti-maximize"></i></div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-head">
+      <div class="sb-label">Nuevo proyecto</div>
+      <div class="upload-zone" id="uploadZone" onclick="openNewProjectModal()">
+        <input type="file" id="fup" style="display:none" accept="image/*,.stl,.obj,.3mf" onchange="handleFileUpload(this)">
+        <i class="ti ti-upload"></i>
+        <p>Subí imagen o modelo 3D</p>
+        <small>STL · OBJ · 3MF · PNG · JPG</small>
+      </div>
+    </div>
+    <div class="sb-section"><div class="sb-label">Proyectos recientes</div></div>
+    <div class="sb-scroll">
+      <div class="proj on" onclick="selProj(this)">
+        <div class="proj-ico"><i class="ti ti-box" style="color:var(--acc2)"></i></div>
+        <div style="min-width:0">
+          <div class="proj-name">Castillo toy</div>
+          <div class="proj-time">Hace 2h · PLA</div>
+        </div>
+        <div class="proj-dot" style="background:var(--warn)"></div>
+      </div>
+      <div class="proj" onclick="selProj(this)">
+        <div class="proj-ico"><i class="ti ti-settings-2" style="color:var(--ok)"></i></div>
+        <div style="min-width:0">
+          <div class="proj-name">Engranaje v2</div>
+          <div class="proj-time">Ayer · ABS</div>
+        </div>
+        <div class="proj-dot" style="background:var(--ok)"></div>
+      </div>
+      <div class="proj" onclick="selProj(this)">
+        <div class="proj-ico"><i class="ti ti-device-laptop" style="color:var(--info)"></i></div>
+        <div style="min-width:0">
+          <div class="proj-name">Soporte monitor</div>
+          <div class="proj-time">3 días · PETG</div>
+        </div>
+        <div class="proj-dot" style="background:var(--ok)"></div>
+      </div>
+      <div class="proj" onclick="selProj(this)">
+        <div class="proj-ico"><i class="ti ti-hexagon-3d" style="color:var(--warn)"></i></div>
+        <div style="min-width:0">
+          <div class="proj-name">Figura Minion</div>
+          <div class="proj-time">1 semana · PLA+</div>
+        </div>
+        <div class="proj-dot" style="background:var(--err)"></div>
+      </div>
+      <div class="proj" onclick="selProj(this)">
+        <div class="proj-ico"><i class="ti ti-flower" style="color:#f07"></i></div>
+        <div style="min-width:0">
+          <div class="proj-name">Florero gen.</div>
+          <div class="proj-time">2 sem · Seda PLA</div>
+        </div>
+        <div class="proj-dot" style="background:var(--ok)"></div>
+      </div>
+      <div class="proj" onclick="selProj(this)">
+        <div class="proj-ico"><i class="ti ti-brain" style="color:#a0f"></i></div>
+        <div style="min-width:0">
+          <div class="proj-name">Cerebro anatómico</div>
+          <div class="proj-time">1 mes · Resina</div>
+        </div>
+        <div class="proj-dot" style="background:var(--ok)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="vp-wrap">
+      <div id="viewport3d" style="width:100%;height:100%;position:relative;"></div>
+
+      <!-- toolbar flotante -->
+      <div class="vp-tbar">
+        <div class="vpbtn on" id="btn-solido" onclick="toggleRender('wire',this)">
+          <i class="ti ti-vector-triangle"></i>Sólido
+        </div>
+        <div class="vpbtn" id="btn-shading" onclick="toggleRender('shading',this)">
+          <i class="ti ti-sun"></i>Iluminación
+        </div>
+        <div class="vpbtn" id="btn-grid" onclick="toggleRender('grid',this)">
+          <i class="ti ti-grid"></i>Grilla
+        </div>
+        <div class="vpbtn" id="btn-bounds" onclick="toggleRender('bounds',this)">
+          <i class="ti ti-square-rotated"></i>Bounds
+        </div>
+      </div>
+
+      <!-- info chips -->
+      <div class="vp-info">
+        <div class="vpchip"><i class="ti ti-ruler-2"></i><span id="dimChip">86 × 74 × 40 mm</span></div>
+        <div class="vpchip"><i class="ti ti-rotate-3d"></i><span id="angChip">0° · 23°</span></div>
+        <div class="vpchip" id="polyChip"><i class="ti ti-topology-star-3"></i><span>24,512 polígonos</span></div>
+      </div>
+
+      <!-- overlay generando -->
+      <div class="vp-generating" id="genOverlay" style="display:none">
+        <div class="gen-ring"></div>
+        <div class="gen-txt">Generando modelo 3D...</div>
+        <div class="gen-sub" id="genSub">Analizando imagen con IA</div>
+      </div>
+
+      <!-- vistas -->
+      <div class="vp-views">
+        <div class="vview on" onclick="setView('front',this)">Frente</div>
+        <div class="vview" onclick="setView('top',this)">Top</div>
+        <div class="vview" onclick="setView('iso',this)">Iso</div>
+        <div class="vview" onclick="setView('right',this)">Derecha</div>
+        <div class="vview" onclick="setView('back',this)">Atrás</div>
+      </div>
+    </div>
+
+    <!-- barra inferior de modos -->
+    <div class="bbar">
+      <div class="btab on" onclick="setMode('3d',this)"><i class="ti ti-3d-cube-sphere"></i>Vista 3D</div>
+      <div class="btab" onclick="setMode('layers',this)">
+        <i class="ti ti-layers-intersect"></i>Capas
+      </div>
+      <div class="btab" onclick="setMode('infill',this)"><i class="ti ti-grid-dots"></i>Relleno</div>
+      <div class="btab" onclick="setMode('supports',this)">
+        <i class="ti ti-hierarchy"></i>Soportes
+        <span class="wcnt">3</span>
+      </div>
+      <div class="btab" onclick="setMode('path',this)"><i class="ti ti-route"></i>Recorrido</div>
+      <div class="bbar-right">
+        <span class="bstat">Polígonos: <b>24,512</b></span>
+        <span class="bstat">Material: <b style="color:var(--ok)">PLA</b></span>
+        <span class="bstat">Escala: <b>100%</b></span>
+        <span class="bstat">Capas: <b>80</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rpanel">
+    <div class="rptabs">
+      <div class="rptab on" onclick="selRp('ia',this)"><i class="ti ti-message-chatbot"></i>IA</div>
+      <div class="rptab" onclick="selRp('val',this)"><i class="ti ti-shield-check"></i>Validar</div>
+      <div class="rptab" onclick="selRp('stats',this)"><i class="ti ti-chart-pie"></i>Stats</div>
+      <div class="rptab" onclick="selRp('exp',this)"><i class="ti ti-file-export"></i>Export</div>
+    </div>
+
+    <!-- IA / CHAT -->
+    <div class="rpbody on" id="rp-ia" style="display:flex;flex-direction:column;height:calc(100vh - 52px - 43px)">
+      <div class="sec" style="flex-shrink:0">Comandos rápidos</div>
+      <div class="qcmds" style="flex-shrink:0">
+        <div class="qc" onclick="sendQ('Hacelo más grande')">+ Grande</div>
+        <div class="qc" onclick="sendQ('Más redondo')">Redondo</div>
+        <div class="qc" onclick="sendQ('Más resistente')">Resistente</div>
+        <div class="qc" onclick="sendQ('Menos material')">- Material</div>
+        <div class="qc" onclick="sendQ('Suavizá bordes')">Suavizar</div>
+        <div class="qc" onclick="sendQ('Agregar textura')">Textura</div>
+        <div class="qc" onclick="sendQ('Estilo cartoon')">Cartoon</div>
+        <div class="qc" onclick="sendQ('Vaciar por dentro (hollow)')">Hollow</div>
+        <div class="qc" onclick="sendQ('Detectar errores y corregir')">Auto-fix</div>
+        <div class="qc" onclick="sendQ('Optimizar orientación')">Orientar</div>
+      </div>
+      <div class="msgs" id="msgs">
+        <div class="msg ai">
+          <div class="mfrom">PrintAI</div>
+          Modelo cargado correctamente. Detecté 2 advertencias: una pared de 0.8mm y un voladizo a 35°. ¿Querés que los corrija automáticamente?
+        </div>
+        <div class="msg me">
+          <div class="mfrom">Vos</div>
+          Sí, corregí todo y hacelo 20% más grande
+        </div>
+        <div class="msg ai">
+          <div class="mfrom">PrintAI</div>
+          ✓ Paredes reforzadas a 1.6mm mínimo.<br>✓ Voladizo reducido a 28° — ya no necesita soporte.<br>✓ Escala aumentada 20% (103 × 89 × 48mm).<br><br>El modelo es ahora completamente imprimible. Puntuación: 88/100.
+        </div>
+      </div>
+      <div class="cinwrap">
+        <textarea class="cin" id="cin" rows="2" placeholder="Describí cómo modificar el modelo..."></textarea>
+        <button class="csend" onclick="sendMsg()"><i class="ti ti-arrow-up"></i></button>
+      </div>
+    </div>
+
+    <!-- VALIDAR -->
+    <div class="rpbody" id="rp-val">
+      <div class="scorewrap">
+        <div class="scorering">
+          <svg width="52" height="52" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="21" fill="none" stroke="#1a1e27" stroke-width="5"/>
+            <circle cx="26" cy="26" r="21" fill="none" stroke="#1fd6a0" stroke-width="5"
+              stroke-dasharray="132" stroke-dashoffset="33" stroke-linecap="round"/>
+          </svg>
+          <div class="scoren">75</div>
+        </div>
+        <div class="scoretxt">
+          <p>Imprimibilidad</p>
+          <span>Bueno — 2 ajustes sugeridos</span>
+        </div>
+      </div>
+
+      <div class="sec">Advertencias activas</div>
+      <div class="witem w-w"><i class="ti ti-alert-triangle"></i>Pared de 0.8mm — mínimo recomendado 1.2mm</div>
+      <div class="witem w-w"><i class="ti ti-alert-triangle"></i>Voladizo 35° — cerca del límite sin soporte</div>
+      <div class="witem w-ok"><i class="ti ti-circle-check"></i>Adhesión a la cama: excelente (base plana)</div>
+      <div class="witem w-ok"><i class="ti ti-circle-check"></i>Sin piezas flotantes detectadas</div>
+      <div class="witem w-ok"><i class="ti ti-circle-check"></i>Malla cerrada — manifold OK</div>
+      <div class="witem w-ok"><i class="ti ti-circle-check"></i>Estabilidad estructural: alta</div>
+
+      <div class="sec">Chequeo técnico de malla</div>
+      <div class="chk"><div class="chl"><i class="ti ti-topology-ring"></i>Manifold (cerrado)</div><div class="badge bok">OK</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-vector-triangle"></i>Normales correctas</div><div class="badge bok">OK</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-dimensions"></i>Grosor mínimo</div><div class="badge bwarn">0.8mm</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-arrows-transfer-up"></i>Ángulo voladizos</div><div class="badge bwarn">35°</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-box-multiple"></i>Cuerpos sólidos</div><div class="badge bok">1</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-stairs-up"></i>Estabilidad base</div><div class="badge bok">Alta</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-bridge"></i>Puentes detectados</div><div class="badge bok">0</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-layers-subtract"></i>Cuerpos intersectados</div><div class="badge bok">Ninguno</div></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="rpbody" id="rp-stats">
+      <div class="sec">Estimación de impresión</div>
+      <div class="statgrid">
+        <div class="statcard">
+          <i class="ti ti-clock icon"></i>
+          <div class="v">2h 14m</div>
+          <div class="l">Tiempo total</div>
+        </div>
+        <div class="statcard">
+          <i class="ti ti-roll icon"></i>
+          <div class="v">18.4g</div>
+          <div class="l">Filamento</div>
+        </div>
+        <div class="statcard">
+          <i class="ti ti-currency-dollar icon"></i>
+          <div class="v">$420</div>
+          <div class="l">Costo est.</div>
+        </div>
+        <div class="statcard">
+          <i class="ti ti-hierarchy icon"></i>
+          <div class="v">3</div>
+          <div class="l">Soportes</div>
+        </div>
+      </div>
+
+      <div class="sec">Riesgo de fallo</div>
+      <div class="riskbar">
+        <div class="riskfill" style="width:35%;background:var(--warn)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-top:-10px;margin-bottom:14px">
+        <span>Bajo</span><span style="color:var(--warn);font-weight:600">35% — Moderado</span><span>Alto</span>
+      </div>
+
+      <div class="sec">Parámetros sugeridos</div>
+      <div class="chk"><div class="chl"><i class="ti ti-stack"></i>Altura de capa</div><span style="font-size:12px;color:var(--t1);font-family:var(--mono)">0.20mm</span></div>
+      <div class="chk"><div class="chl"><i class="ti ti-speedboat"></i>Velocidad</div><span style="font-size:12px;color:var(--t1);font-family:var(--mono)">50mm/s</span></div>
+      <div class="chk"><div class="chl"><i class="ti ti-squares-filled"></i>Relleno</div><span style="font-size:12px;color:var(--t1);font-family:var(--mono)">20% Gyroid</span></div>
+      <div class="chk"><div class="chl"><i class="ti ti-thermometer"></i>Temp. boquilla</div><span style="font-size:12px;color:var(--t1);font-family:var(--mono)">215°C</span></div>
+      <div class="chk"><div class="chl"><i class="ti ti-cube"></i>Cama calefaccionada</div><span style="font-size:12px;color:var(--t1);font-family:var(--mono)">60°C</span></div>
+      <div class="chk"><div class="chl"><i class="ti ti-wind"></i>Cooling</div><span style="font-size:12px;color:var(--t1);font-family:var(--mono)">100%</span></div>
+      <div class="chk"><div class="chl"><i class="ti ti-box"></i>Material</div><span style="font-size:12px;color:var(--ok);font-weight:600">PLA — Recomendado</span></div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="rpbody" id="rp-exp">
+      <div class="sec">Formato de exportación</div>
+      <div class="exitem">
+        <div class="exl">
+          <i class="ti ti-file-3d"></i>
+          <div><div class="exname">STL</div><div class="exdesc">Estándar universal para impresión</div></div>
+        </div>
+        <i class="ti ti-download exdl"></i>
+      </div>
+      <div class="exitem">
+        <div class="exl">
+          <i class="ti ti-cube-3d-sphere"></i>
+          <div><div class="exname">OBJ</div><div class="exdesc">Con materiales y UV maps</div></div>
+        </div>
+        <i class="ti ti-download exdl"></i>
+      </div>
+      <div class="exitem">
+        <div class="exl">
+          <i class="ti ti-packages"></i>
+          <div><div class="exname">3MF</div><div class="exdesc">Config. completa embebida</div></div>
+        </div>
+        <i class="ti ti-download exdl"></i>
+      </div>
+
+      <div class="sec" style="margin-top:16px">Perfil de impresora</div>
+      <select class="prsel">
+        <option>Ender 3 Pro</option>
+        <option>Prusa MK4</option>
+        <option>Bambu X1 Carbon</option>
+        <option>Creality K1 Max</option>
+        <option>Voron 2.4</option>
+        <option>Prusa XL</option>
+        <option>Custom...</option>
+      </select>
+
+      <div class="sec" style="margin-top:16px">Estado antes de exportar</div>
+      <div class="witem w-w"><i class="ti ti-alert-triangle"></i>2 advertencias — revisá antes de imprimir</div>
+      <div class="witem w-ok"><i class="ti ti-circle-check"></i>Orientación optimizada automáticamente</div>
+      <div class="witem w-ok"><i class="ti ti-circle-check"></i>Escala correcta para la impresora seleccionada</div>
+    </div>
+
+  </div><!-- /rpanel -->
+
+</div><!-- /app -->
+
+<script>
+// ── UTILS ──
+function activeTT(el){
+  document.querySelectorAll('.tt').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+function selIb(el){
+  document.querySelectorAll('.ib').forEach(i=>i.classList.remove('on'));
+  el.classList.add('on');
+}
+function selProj(el){
+  document.querySelectorAll('.proj').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function toggleRender(type,el){el.classList.toggle('on');}
+function showExport(){selRp('exp',document.querySelectorAll('.rptab')[3]);}
+
+function setView(v,el){
+  document.querySelectorAll('.vview').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  const va={front:0,top:0,iso:0.6,right:Math.PI/2,back:Math.PI};
+  const pa={front:0.18,top:1.2,iso:0.5,right:0.28,back:0.18};
+  ang=va[v]; pit=pa[v];
+}
+
+function setMode(mode,el){
+  document.querySelectorAll('.btab').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  curMode=mode;
+}
+
+function selRp(id,el){
+  document.querySelectorAll('.rpbody').forEach(b=>{b.style.display='none';b.classList.remove('on')});
+  const t=document.getElementById('rp-'+id);
+  if(t){
+    t.style.display= id==='ia' ? 'flex' : 'block';
+    t.classList.add('on');
+  }
+  document.querySelectorAll('.rptab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+}
+
+// ── UPLOAD HANDLER ──
+function handleUpload(inp){
+  if(!inp.files.length) return;
+  const gen=document.getElementById('genOverlay');
+  const sub=document.getElementById('genSub');
+  gen.style.display='flex';
+  const steps=['Analizando imagen con IA...','Detectando geometría...','Generando malla 3D...','Optimizando para impresión...','Validando imprimibilidad...'];
+  let i=0;
+  const iv=setInterval(()=>{
+    sub.textContent=steps[i]||steps[steps.length-1];
+    i++;
+    if(i>=steps.length+1){clearInterval(iv);gen.style.display='none';}
+  },900);
+}
+
+// ── VISOR 3D CON THREE.JS ──
+// Variables globales del visor
+let renderer, scene, camera, controls, modelMesh, gridHelper, axesHelper;
+let curMode = '3d';
+let isModelLoaded = false;
+let drag = false, lx = 0, ly = 0;
+let ang = 0, pit = 0.4; // compatibilidad con sistema de proyectos
+
+// Canvas 2D para vistas alternativas (capas/relleno/soportes/recorrido)
+let cv2d, ctx2d;
+
+function initThree() {
+  const container = document.getElementById('viewport3d');
+  const W = container.offsetWidth, H = container.offsetHeight;
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setClearColor(0x080a0e, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // Canvas 2D overlay para vistas alternativas
+  cv2d = document.createElement('canvas');
+  cv2d.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:none;';
+  container.appendChild(cv2d);
+  ctx2d = cv2d.getContext('2d');
+
+  // Escena
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x080a0e);
+
+  // Cámara
+  camera = new THREE.PerspectiveCamera(45, W / H, 0.01, 2000);
+  camera.position.set(0, 80, 200);
+  camera.lookAt(0, 0, 0);
+
+  // Iluminación
+  const ambient = new THREE.AmbientLight(0x404060, 0.8);
+  scene.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  dirLight.position.set(100, 200, 150);
+  dirLight.castShadow = true;
+  scene.add(dirLight);
+  const fillLight = new THREE.DirectionalLight(0x5b6cf9, 0.4);
+  fillLight.position.set(-100, 50, -80);
+  scene.add(fillLight);
+  const rimLight = new THREE.DirectionalLight(0x1fd6a0, 0.3);
+  rimLight.position.set(0, -100, -100);
+  scene.add(rimLight);
+
+  // Grilla
+  gridHelper = new THREE.GridHelper(300, 30, 0x1a1e27, 0x13161c);
+  scene.add(gridHelper);
+
+  // Ejes (pequeños)
+  axesHelper = new THREE.AxesHelper(20);
+  axesHelper.position.set(-130, 0, -130);
+  scene.add(axesHelper);
+
+  // Modelo demo (castillo simplificado con primitivas Three.js)
+  loadDemoModel();
+
+  // Controls manuales (sin OrbitControls para no depender de import maps)
+  setupControls();
+
+  // Resize
+  window.addEventListener('resize', onResize);
+
+  // Render loop
+  animate();
+}
+
+function loadDemoModel() {
+  if (modelMesh) { scene.remove(modelMesh); modelMesh = null; }
+
+  const group = new THREE.Group();
+  const mat = new THREE.MeshPhongMaterial({
+    color: 0xc03030, specular: 0x222244, shininess: 40
+  });
+  const matTower = new THREE.MeshPhongMaterial({
+    color: 0x7033c0, specular: 0x333355, shininess: 60
+  });
+  const matDoor = new THREE.MeshPhongMaterial({ color: 0x1a1e27 });
+
+  // Cuerpo principal
+  const body = new THREE.Mesh(new THREE.BoxGeometry(60, 30, 40), mat);
+  body.position.set(0, 15, 0);
+  body.castShadow = true;
+  group.add(body);
+
+  // Torres
+  [[-25, 0], [25, 0]].forEach(([x]) => {
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 50, 8), matTower);
+    tower.position.set(x, 25, 0);
+    tower.castShadow = true;
+    group.add(tower);
+    const top = new THREE.Mesh(new THREE.ConeGeometry(10, 15, 8), matTower);
+    top.position.set(x, 57, 0);
+    group.add(top);
+  });
+
+  // Puerta
+  const door = new THREE.Mesh(new THREE.BoxGeometry(12, 18, 2), matDoor);
+  door.position.set(0, 9, 21);
+  group.add(door);
+
+  // Almenas
+  for (let i = -2; i <= 2; i++) {
+    const merlon = new THREE.Mesh(new THREE.BoxGeometry(8, 8, 5), mat);
+    merlon.position.set(i * 12, 36, 21);
+    group.add(merlon);
+  }
+
+  // Plataforma base
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(80, 3, 55),
+    new THREE.MeshPhongMaterial({ color: 0x961818 })
+  );
+  base.position.set(0, 1.5, 0);
+  base.receiveShadow = true;
+  group.add(base);
+
+  scene.add(group);
+  modelMesh = group;
+  isModelLoaded = true;
+
+  updateModelInfo(group);
+}
+
+function updateModelInfo(obj) {
+  // Calcular bounding box
+  const box = new THREE.Box3().setFromObject(obj);
+  const size = box.getSize(new THREE.Vector3());
+  document.getElementById('dimChip').textContent =
+    `${Math.round(size.x)} × ${Math.round(size.z)} × ${Math.round(size.y)} mm`;
+}
+
+// ── CARGA DE ARCHIVOS REALES ──
+function parseSTL(buffer) {
+  // Detectar binario vs ASCII
+  const text = new TextDecoder().decode(new Uint8Array(buffer, 0, 80));
+  if (text.startsWith('solid') && !isBinarySTL(buffer)) {
+    return parseSTLAscii(new TextDecoder().decode(buffer));
+  }
+  return parseSTLBinary(buffer);
+}
+
+function isBinarySTL(buffer) {
+  const view = new DataView(buffer);
+  const triangles = view.getUint32(80, true);
+  return buffer.byteLength === 84 + triangles * 50;
+}
+
+function parseSTLBinary(buffer) {
+  const view = new DataView(buffer);
+  const triangles = view.getUint32(80, true);
+  const geo = new THREE.BufferGeometry();
+  const verts = new Float32Array(triangles * 9);
+  const norms = new Float32Array(triangles * 9);
+  let offset = 84;
+  for (let i = 0; i < triangles; i++) {
+    const nx = view.getFloat32(offset, true);
+    const ny = view.getFloat32(offset + 4, true);
+    const nz = view.getFloat32(offset + 8, true);
+    offset += 12;
+    for (let j = 0; j < 3; j++) {
+      const vi = i * 9 + j * 3;
+      verts[vi]     = view.getFloat32(offset, true);
+      verts[vi + 1] = view.getFloat32(offset + 4, true);
+      verts[vi + 2] = view.getFloat32(offset + 8, true);
+      norms[vi] = nx; norms[vi + 1] = ny; norms[vi + 2] = nz;
+      offset += 12;
+    }
+    offset += 2; // atributo
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+  geo.setAttribute('normal',   new THREE.BufferAttribute(norms, 3));
+  return geo;
+}
+
+function parseSTLAscii(text) {
+  const geo = new THREE.BufferGeometry();
+  const verts = [];
+  const lines = text.split('\n');
+  lines.forEach(line => {
+    line = line.trim();
+    if (line.startsWith('vertex')) {
+      const parts = line.split(/\s+/);
+      verts.push(parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3]));
+    }
+  });
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+  geo.computeVertexNormals();
+  return geo;
+}
+
+function parseOBJ(text) {
+  const geo = new THREE.BufferGeometry();
+  const positions = [], normals = [], uvs = [];
+  const finalVerts = [], finalNorms = [];
+  const lines = text.split('\n');
+
+  lines.forEach(line => {
+    line = line.trim();
+    if (line.startsWith('v ')) {
+      const p = line.split(/\s+/);
+      positions.push([parseFloat(p[1]), parseFloat(p[2]), parseFloat(p[3])]);
+    } else if (line.startsWith('vn ')) {
+      const p = line.split(/\s+/);
+      normals.push([parseFloat(p[1]), parseFloat(p[2]), parseFloat(p[3])]);
+    } else if (line.startsWith('f ')) {
+      const parts = line.split(/\s+/).slice(1);
+      const faceVerts = parts.map(p => {
+        const idx = p.split('/');
+        return {
+          vi: parseInt(idx[0]) - 1,
+          ni: idx[2] ? parseInt(idx[2]) - 1 : -1
+        };
+      });
+      // Triangulación fan
+      for (let i = 1; i < faceVerts.length - 1; i++) {
+        [faceVerts[0], faceVerts[i], faceVerts[i + 1]].forEach(v => {
+          const pos = positions[v.vi] || [0, 0, 0];
+          finalVerts.push(...pos);
+          if (v.ni >= 0 && normals[v.ni]) finalNorms.push(...normals[v.ni]);
+          else finalNorms.push(0, 1, 0);
+        });
+      }
+    }
+  });
+
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(finalVerts), 3));
+  geo.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(finalNorms), 3));
+  if (finalNorms.every(v => v === 0)) geo.computeVertexNormals();
+  return geo;
+}
+
+function loadGeometry(geo, filename) {
+  if (modelMesh) { scene.remove(modelMesh); modelMesh = null; }
+
+  // Centrar y escalar
+  geo.computeBoundingBox();
+  const box  = geo.boundingBox;
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const scale = 120 / maxDim;
+
+  const center = box.getCenter(new THREE.Vector3());
+  geo.translate(-center.x, -center.y, -center.z);
+
+  const mat = new THREE.MeshPhongMaterial({
+    color: 0x5b6cf9,
+    specular: 0x334499,
+    shininess: 60,
+    side: THREE.DoubleSide
+  });
+
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.scale.setScalar(scale);
+  mesh.position.y = (size.y * scale) / 2;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
+  scene.add(mesh);
+  modelMesh = mesh;
+  isModelLoaded = true;
+
+  // Actualizar info
+  const triCount = geo.attributes.position.count / 3;
+  document.getElementById('dimChip').textContent =
+    `${Math.round(size.x)} × ${Math.round(size.z)} × ${Math.round(size.y)} mm`;
+  document.querySelector('.bbar-right').innerHTML = `
+    <span class="bstat">Polígonos: <b>${triCount.toLocaleString('es-AR')}</b></span>
+    <span class="bstat">Archivo: <b style="color:var(--ok)">${filename}</b></span>
+    <span class="bstat">Escala: <b>100%</b></span>
+  `;
+
+  // Actualizar stats
+  const vol = size.x * size.y * size.z * 0.0001;
+  const filamento = (vol * 0.21).toFixed(1);
+  const tiempo = Math.round(vol * 0.8 + 30);
+  document.querySelector('#rp-stats .statgrid').innerHTML = `
+    <div class="statcard"><i class="ti ti-clock icon"></i><div class="v">${Math.floor(tiempo/60)}h ${tiempo%60}m</div><div class="l">Tiempo total</div></div>
+    <div class="statcard"><i class="ti ti-roll icon"></i><div class="v">${filamento}g</div><div class="l">Filamento</div></div>
+    <div class="statcard"><i class="ti ti-currency-dollar icon"></i><div class="v">$${Math.round(filamento*22)}</div><div class="l">Costo est.</div></div>
+    <div class="statcard"><i class="ti ti-hierarchy icon"></i><div class="v">${Math.round(vol*0.3)}</div><div class="l">Soportes</div></div>
+  `;
+
+  // Resetear cámara
+  camera.position.set(0, 80, 200);
+  camera.lookAt(0, 0, 0);
+  camTarget.set(0, 0, 0);
+
+  showToast('ok', 'ti-3d-cube-sphere', `Modelo "${filename}" cargado`);
+}
+
+async function handleFileUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const gen = document.getElementById('genOverlay');
+  const sub = document.getElementById('genSub');
+  gen.style.display = 'flex';
+
+  // Simular pasos de procesamiento
+  const steps = ['Leyendo archivo...', 'Parseando geometría...', 'Optimizando malla...', 'Calculando normales...', 'Centrando modelo...'];
+  let si = 0;
+  const iv = setInterval(() => { if (si < steps.length) sub.textContent = steps[si++]; }, 400);
+
+  try {
+    await new Promise(r => setTimeout(r, 200));
+    if (ext === 'stl') {
+      const buffer = await file.arrayBuffer();
+      const geo = parseSTL(buffer);
+      clearInterval(iv);
+      gen.style.display = 'none';
+      loadGeometry(geo, file.name);
+    } else if (ext === 'obj') {
+      const text = await file.text();
+      const geo = parseOBJ(text);
+      clearInterval(iv);
+      gen.style.display = 'none';
+      loadGeometry(geo, file.name);
+    } else if (ext === 'jpg' || ext === 'jpeg' || ext === 'png' || ext === 'webp') {
+      clearInterval(iv);
+      // Imagen → abrir modal de nuevo proyecto
+      gen.style.display = 'none';
+      openNewProjectModal();
+    } else {
+      clearInterval(iv);
+      gen.style.display = 'none';
+      showToast('warn', 'ti-alert-triangle', `Formato .${ext} — próximamente soportado`);
+    }
+  } catch (e) {
+    clearInterval(iv);
+    gen.style.display = 'none';
+    showToast('err', 'ti-x', 'Error al cargar el archivo: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ── CONTROLES DE CÁMARA MANUALES ──
+const camTarget = new THREE.Vector3(0, 0, 0);
+const spherical = { theta: 0.5, phi: 1.0, radius: 200 };
+
+function updateCamera() {
+  const x = spherical.radius * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+  const y = spherical.radius * Math.cos(spherical.phi);
+  const z = spherical.radius * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+  camera.position.set(
+    camTarget.x + x,
+    camTarget.y + y,
+    camTarget.z + z
+  );
+  camera.lookAt(camTarget);
+  ang = spherical.theta;
+  pit = spherical.phi;
+  document.getElementById('angChip').textContent =
+    `${Math.round(THREE.MathUtils.radToDeg(spherical.theta) % 360)}° · ${Math.round(THREE.MathUtils.radToDeg(spherical.phi))}°`;
+}
+
+function setupControls() {
+  const el = renderer.domElement;
+
+  el.addEventListener('mousedown', e => { drag = true; lx = e.clientX; ly = e.clientY; e.preventDefault(); });
+  window.addEventListener('mouseup', () => { drag = false; });
+  window.addEventListener('mousemove', e => {
+    if (!drag || curMode !== '3d') return;
+    spherical.theta -= (e.clientX - lx) * 0.008;
+    spherical.phi   -= (e.clientY - ly) * 0.006;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    lx = e.clientX; ly = e.clientY;
+    updateCamera();
+  });
+  el.addEventListener('wheel', e => {
+    e.preventDefault();
+    spherical.radius = Math.max(30, Math.min(800, spherical.radius + e.deltaY * 0.3));
+    updateCamera();
+  }, { passive: false });
+
+  // Touch
+  el.addEventListener('touchstart', e => { drag = true; lx = e.touches[0].clientX; ly = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchend',   () => { drag = false; });
+  el.addEventListener('touchmove',  e => {
+    if (!drag) return;
+    e.preventDefault();
+    spherical.theta -= (e.touches[0].clientX - lx) * 0.008;
+    spherical.phi   -= (e.touches[0].clientY - ly) * 0.006;
+    spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+    lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    updateCamera();
+  }, { passive: false });
+}
+
+// ── VISTAS ──
+function setView(preset, el) {
+  document.querySelectorAll('.vview').forEach(e => e.classList.remove('on'));
+  el.classList.add('on');
+  const views = {
+    front: { theta: 0,            phi: 1.2,  r: 200 },
+    top:   { theta: 0,            phi: 0.05, r: 200 },
+    iso:   { theta: Math.PI/4,    phi: 0.9,  r: 220 },
+    right: { theta: Math.PI/2,    phi: 1.2,  r: 200 },
+    back:  { theta: Math.PI,      phi: 1.2,  r: 200 },
+  };
+  const v = views[preset];
+  if (v) {
+    spherical.theta = v.theta;
+    spherical.phi   = v.phi;
+    spherical.radius = v.r;
+    updateCamera();
+  }
+}
+
+function setMode(mode, el) {
+  document.querySelectorAll('.btab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  curMode = mode;
+
+  const container = document.getElementById('viewport3d');
+  if (mode === '3d') {
+    renderer.domElement.style.display = 'block';
+    cv2d.style.display = 'none';
+  } else {
+    renderer.domElement.style.display = 'none';
+    cv2d.style.display = 'block';
+    cv2d.width  = container.offsetWidth;
+    cv2d.height = container.offsetHeight;
+    draw2D(mode, cv2d.width, cv2d.height);
+  }
+}
+
+// ── VISTAS 2D (capas, relleno, soportes, recorrido) ──
+function draw2D(mode, W, H) {
+  if (!ctx2d) return;
+  ctx2d.fillStyle = '#080a0e';
+  ctx2d.fillRect(0, 0, W, H);
+  if (mode === 'layers')   drawLayers2D(W, H);
+  else if (mode === 'infill')   drawInfill2D(W, H);
+  else if (mode === 'supports') drawSupports2D(W, H);
+  else if (mode === 'path')     drawPath2D(W, H);
+}
+
+function drawLayers2D(W, H) {
+  const cx = W/2, cy = H/2, bw = Math.min(W*.35,220), bh = Math.min(H*.6,300);
+  const maxL = 80, curL = 50;
+  ctx2d.fillStyle = '#13161c'; ctx2d.fillRect(cx-bw/2, cy-bh/2, bw, bh);
+  for (let i = 0; i <= curL; i++) {
+    const t = i / maxL, y = cy + bh/2 - t*bh;
+    ctx2d.fillStyle = `hsl(${220+t*80},70%,${28+t*28}%)`;
+    ctx2d.fillRect(cx-bw/2, y, bw, bh/maxL+1);
+  }
+  ctx2d.strokeStyle = 'rgba(91,108,249,.2)'; ctx2d.lineWidth = 0.5;
+  for (let i = 0; i <= curL; i+=4) {
+    const y = cy + bh/2 - (i/maxL)*bh;
+    ctx2d.beginPath(); ctx2d.moveTo(cx-bw/2,y); ctx2d.lineTo(cx+bw/2,y); ctx2d.stroke();
+  }
+  const lY = cy + bh/2 - (curL/maxL)*bh;
+  ctx2d.strokeStyle = '#5b6cf9'; ctx2d.lineWidth = 2.5;
+  ctx2d.beginPath(); ctx2d.moveTo(cx-bw/2-5,lY); ctx2d.lineTo(cx+bw/2+5,lY); ctx2d.stroke();
+  ctx2d.fillStyle = '#e8ecff'; ctx2d.font = `500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign = 'center';
+  ctx2d.fillText('Capa 50 / 80 — 0.20mm/capa', cx, 40);
+  ctx2d.fillStyle = '#454d6a'; ctx2d.font = `${Math.round(W*.018)}px Outfit,sans-serif`;
+  ctx2d.fillText('Altura total: 16.0mm | Tiempo estimado restante: 1h 07m', cx, H-22);
+}
+
+function drawInfill2D(W, H) {
+  const cx = W/2, cy = H/2, sz = Math.min(W,H)*.36;
+  const step = sz/12;
+  ctx2d.strokeStyle = '#1fd6a018'; ctx2d.lineWidth = 0.8;
+  for (let x=cx-sz; x<=cx+sz; x+=step) { ctx2d.beginPath(); ctx2d.moveTo(x,cy-sz); ctx2d.lineTo(x,cy+sz); ctx2d.stroke(); }
+  for (let y=cy-sz; y<=cy+sz; y+=step) { ctx2d.beginPath(); ctx2d.moveTo(cx-sz,y); ctx2d.lineTo(cx+sz,y); ctx2d.stroke(); }
+  ctx2d.strokeStyle = '#5b6cf955'; ctx2d.lineWidth = 1.2;
+  for (let i=-26; i<26; i++) { const x=cx-sz+i*step; ctx2d.beginPath(); ctx2d.moveTo(x,cy-sz); ctx2d.lineTo(x+sz,cy+sz); ctx2d.stroke(); }
+  ctx2d.strokeStyle = '#1fd6a030'; ctx2d.lineWidth = 1;
+  for (let i=-26; i<26; i++) { const x=cx-sz+i*step; ctx2d.beginPath(); ctx2d.moveTo(x+sz,cy-sz); ctx2d.lineTo(x,cy+sz); ctx2d.stroke(); }
+  ctx2d.strokeStyle = '#1a1e27'; ctx2d.lineWidth = 12; ctx2d.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
+  ctx2d.strokeStyle = '#e8ecff'; ctx2d.lineWidth = 1.5; ctx2d.strokeRect(cx-sz,cy-sz,sz*2,sz*2);
+  ctx2d.fillStyle = '#e8ecff'; ctx2d.font = `500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign = 'center';
+  ctx2d.fillText('Relleno gyroid — 20%', cx, 38);
+  ctx2d.fillStyle = '#454d6a'; ctx2d.font = `${Math.round(W*.018)}px Outfit,sans-serif`;
+  ctx2d.fillText('Ahorro vs 40%: 6.2g | Resistencia: 73% del sólido', cx, H-22);
+}
+
+function drawSupports2D(W, H) {
+  const cx=W/2, cy=H/2+20, s=Math.min(W,H)*.0028;
+  ctx2d.fillStyle='#962828'; ctx2d.fillRect(cx-80*s,cy-70*s,160*s,70*s);
+  ctx2d.fillStyle='#7033c0'; ctx2d.fillRect(cx-70*s,cy-120*s,55*s,50*s);
+  ctx2d.fillStyle='#9055e8'; ctx2d.fillRect(cx+15*s,cy-120*s,55*s,50*s);
+  [[cx-70*s,cy-70*s,cx-15*s,cy-120*s],[cx+15*s,cy-70*s,cx+70*s,cy-120*s]].forEach(([x1,y1,x2,y2])=>{
+    ctx2d.fillStyle='rgba(245,200,66,.18)';
+    ctx2d.beginPath();ctx2d.moveTo(x1,y1);ctx2d.lineTo(x2,y1);ctx2d.lineTo(x1,y2);ctx2d.closePath();ctx2d.fill();
+    ctx2d.strokeStyle='#f5c842';ctx2d.lineWidth=1.5;ctx2d.stroke();
+    for(let x=Math.min(x1,x2);x<Math.max(x1,x2);x+=7){ctx2d.fillStyle='rgba(91,108,249,.2)';ctx2d.fillRect(x,y1,4,Math.abs(y2-y1));}
+  });
+  ctx2d.fillStyle='#e8ecff'; ctx2d.font=`500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign='center';
+  ctx2d.fillText('3 soportes — zonas amarillas',cx,40);
+  ctx2d.fillStyle='#454d6a'; ctx2d.font=`${Math.round(W*.018)}px Outfit,sans-serif`;
+  ctx2d.fillText('Filamento extra para soportes: +1.8g | Tiempo extra: +14min',cx,H-22);
+}
+
+function drawPath2D(W, H) {
+  const cx=W/2, cy=H/2, pts=[];
+  for(let i=0;i<220;i++){
+    const t=i/220, layer=Math.floor(i/30);
+    const r=(Math.min(W,H)*.17)+layer*Math.min(W,H)*.022;
+    pts.push([cx+r*Math.cos(t*Math.PI*14), cy+r*Math.sin(t*Math.PI*14)-layer*Math.min(H*.038,20)]);
+  }
+  for(let i=1;i<pts.length;i++){
+    const t=i/pts.length;
+    ctx2d.strokeStyle=`hsl(${220+t*110},80%,60%)`; ctx2d.lineWidth=1.8;
+    ctx2d.beginPath(); ctx2d.moveTo(pts[i-1][0],pts[i-1][1]); ctx2d.lineTo(pts[i][0],pts[i][1]); ctx2d.stroke();
+  }
+  ctx2d.fillStyle='#e8ecff'; ctx2d.font=`500 ${Math.round(W*.022)}px Outfit,sans-serif`; ctx2d.textAlign='center';
+  ctx2d.fillText('Recorrido de impresión — 7 capas',cx,40);
+  ctx2d.fillStyle='#454d6a'; ctx2d.font=`${Math.round(W*.018)}px Outfit,sans-serif`;
+  ctx2d.fillText('Longitud total estimada: 48.3m | Velocidad: 50mm/s',cx,H-22);
+}
+
+// ── TOGGLE OPCIONES RENDER ──
+function toggleRender(type, el) {
+  el.classList.toggle('on');
+  if (!modelMesh) return;
+  if (type === 'wire') {
+    const isWire = !el.classList.contains('on');
+    modelMesh.traverse(m => {
+      if (m.isMesh) {
+        m.material.wireframe = isWire;
+        el.innerHTML = isWire
+          ? '<i class="ti ti-vector-triangle"></i>Wireframe'
+          : '<i class="ti ti-vector-triangle"></i>Sólido';
+      }
+    });
+  }
+  if (type === 'grid') {
+    gridHelper.visible = el.classList.contains('on');
+  }
+  if (type === 'shading') {
+    const flat = !el.classList.contains('on');
+    modelMesh.traverse(m => {
+      if (m.isMesh) m.material.flatShading = flat;
+    });
+  }
+}
+
+// ── RESIZE ──
+function onResize() {
+  const container = document.getElementById('viewport3d');
+  const W = container.offsetWidth, H = container.offsetHeight;
+  renderer.setSize(W, H);
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+  if (curMode !== '3d' && cv2d) {
+    cv2d.width = W; cv2d.height = H;
+    draw2D(curMode, W, H);
+  }
+}
+
+// ── THUMBNAIL para guardar proyecto ──
+function getThumbnail() {
+  try {
+    if (curMode === '3d' && renderer) return renderer.domElement.toDataURL('image/jpeg', 0.6);
+    return null;
+  } catch(e) { return null; }
+}
+
+// ── ANIMATE LOOP ──
+function animate() {
+  requestAnimationFrame(animate);
+  if (curMode === '3d' && renderer) renderer.render(scene, camera);
+}
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  initThree();
+  updateCamera();
+});
+
+
+// ── CHAT ──
+const replies=[
+  'Aplicado ✓ El modelo sigue siendo imprimible sin soportes extras. Puntuación actualizada: 82/100.',
+  'Entendido. Geometría ajustada correctamente. Verificá la vista 3D para confirmar el resultado.',
+  'Hecho. Recalculé las estimaciones: tiempo +12min, material +2.1g. ¿Querés confirmar o deshacer?',
+  'Cambio aplicado. Detecté un nuevo voladizo pequeño — ¿querés que agregue soporte automático?',
+  'Optimización lista. Ahorrás 15% de filamento manteniendo la misma resistencia estructural.',
+  'Listo. El hollowing redujo el peso de 18.4g a 9.2g. El grosor de pared quedó en 1.8mm.',
+  'Textura aplicada. El patrón aumenta ligeramente el tiempo de impresión (+8min) pero mejora el agarre.',
+  'Orientación optimizada. La pieza girada 15° reduce los soportes de 3 a 1.',
+];
+let ri=0;
+function sendMsg(){
+  const inp=document.getElementById('cin'), txt=inp.value.trim();
+  if(!txt) return;
+  const m=document.getElementById('msgs');
+  const u=document.createElement('div'); u.className='msg me';
+  u.innerHTML='<div class="mfrom">Vos</div>'+txt;
+  m.appendChild(u); inp.value='';
+  inp.style.height='auto';
+  const typingDiv=document.createElement('div'); typingDiv.className='msg ai';
+  typingDiv.innerHTML='<div class="mfrom">PrintAI</div><i>Procesando...</i>';
+  m.appendChild(typingDiv); m.scrollTop=9999;
+  setTimeout(()=>{
+    typingDiv.innerHTML='<div class="mfrom">PrintAI</div>'+replies[ri%replies.length];
+    ri++; m.scrollTop=9999;
+  },700);
+}
+function sendQ(t){document.getElementById('cin').value=t; sendMsg();}
+document.getElementById('cin').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}
+});
+document.getElementById('cin').addEventListener('input',function(){
+  this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,80)+'px';
+});
+
+// loop — solo redibuja cuando hay interacción
+function loop(){
+  requestAnimationFrame(loop);
+}
+// resize y draw manejados por Three.js
+</script>
+
+
+<!-- MODAL AYUDA / INSTALACIÓN -->
+<div class="modal-overlay" id="modalHelp">
+  <div class="modal" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div class="modal-title" style="margin:0">
+        <i class="ti ti-device-desktop" style="color:var(--acc2)"></i> Cómo instalar PrintAI Studio
+      </div>
+      <button onclick="closeModal('modalHelp')" style="background:none;border:none;color:var(--t3);font-size:22px;cursor:pointer"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Paso a paso -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--b1)">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">1</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px">Abrí la app en Chrome</div>
+          <div style="font-size:12px;color:var(--t3)">Funciona mejor en Chrome o Edge. Safari tiene soporte limitado.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--b1)">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">2</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px">Buscá el ícono de instalar</div>
+          <div style="font-size:12px;color:var(--t3)">En la barra de Chrome, arriba a la derecha, vas a ver un ícono 
+          <span style="background:var(--bg4);border:1px solid var(--b2);padding:1px 7px;border-radius:5px;font-family:var(--mono);font-size:11px">⊕</span> 
+          o un botón que dice <b style="color:var(--t2)">"Instalar PrintAI Studio"</b>.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--b1)">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">3</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px">Hacé click en "Instalar"</div>
+          <div style="font-size:12px;color:var(--t3)">La app se instala en tu computadora y aparece en el escritorio o en el menú de apps. Se abre sin el navegador, como una app normal.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:12px;background:var(--bg3);border-radius:10px;border:1px solid var(--b1)">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">4</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px">En celular</div>
+          <div style="font-size:12px;color:var(--t3)">En Chrome para Android: menú de tres puntos → <b style="color:var(--t2)">"Agregar a pantalla de inicio"</b>.<br>
+          En Safari para iPhone: botón compartir → <b style="color:var(--t2)">"Agregar a inicio"</b>.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Link directo -->
+    <div style="background:var(--bg3);border:1px solid var(--b2);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:6px">Link de la app</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="appUrl" style="font-size:12px;color:var(--acc2);font-family:var(--mono);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button onclick="copyAppUrl()" class="tbtn" style="padding:5px 10px;font-size:11px;flex-shrink:0">
+          <i class="ti ti-copy"></i>Copiar
+        </button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="modal-btn primary" onclick="closeModal('modalHelp')">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="ti ti-circle-check" id="toast-icon"></i>
+  <span id="toast-msg">Guardado correctamente</span>
+</div>
+
+<!-- INSTALL BAR -->
+<div class="install-bar" id="installBar">
+  <i class="ti ti-device-desktop" style="font-size:22px;color:var(--acc2)"></i>
+  <p><b>Instalá PrintAI Studio</b> como app en tu ordenador para usarla sin navegador</p>
+  <button class="install-bar-btn" id="installBtn">Instalar app</button>
+  <button class="install-bar-close" onclick="closeInstallBar()"><i class="ti ti-x"></i></button>
+</div>
+
+<!-- MODAL NUEVO PROYECTO -->
+<div class="modal-overlay" id="modalNew">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-plus" style="color:var(--acc2)"></i> Nuevo proyecto</div>
+    <div class="modal-sub">Dale un nombre a tu proyecto antes de empezar</div>
+    <input class="modal-input" id="newProjName" placeholder="Ej: Soporte de celular, Figura personaje..." maxlength="40">
+    <div style="margin-bottom:14px">
+      <div class="sb-label" style="margin-bottom:8px">Material</div>
+      <select class="prsel" id="newProjMat" style="margin-top:0">
+        <option>PLA</option><option>PLA+</option><option>PETG</option>
+        <option>ABS</option><option>ASA</option><option>TPU</option>
+        <option>Resina</option><option>Seda PLA</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeModal('modalNew')">Cancelar</button>
+      <button class="modal-btn primary" onclick="createNewProject()">Crear proyecto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GUARDAR -->
+<div class="modal-overlay" id="modalSave">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-device-floppy" style="color:var(--acc2)"></i> Guardar proyecto</div>
+    <div class="modal-sub">Se descargará un archivo <b>.printai</b> en tu ordenador</div>
+    <input class="modal-input" id="saveProjName" placeholder="Nombre del archivo...">
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeModal('modalSave')">Cancelar</button>
+      <button class="modal-btn primary" onclick="doSaveProject()">
+        <i class="ti ti-download"></i> Descargar .printai
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR BORRAR -->
+<div class="modal-overlay" id="modalDelete">
+  <div class="modal">
+    <div class="modal-title">Eliminar proyecto</div>
+    <div class="modal-sub" id="modalDeleteMsg">¿Seguro que querés eliminar este proyecto?</div>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="closeModal('modalDelete')">Cancelar</button>
+      <button class="modal-btn danger" onclick="confirmDelete()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ════════════════════════════════════════════════
+//  SERVICE WORKER + PWA
+// ════════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('printai-sw.js')
+      .then(() => console.log('SW registrado'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  setTimeout(() => {
+    document.getElementById('installBar').classList.add('show');
+  }, 3000);
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBar').classList.remove('show');
+  showToast('ok', 'ti-device-desktop', '¡PrintAI Studio instalada correctamente!');
+});
+
+function closeInstallBar(){
+  document.getElementById('installBar').classList.remove('show');
+}
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if(outcome === 'accepted'){
+    showToast('ok','ti-check','Instalando PrintAI Studio...');
+  }
+  deferredInstallPrompt = null;
+});
+
+// ════════════════════════════════════════════════
+//  SISTEMA DE PROYECTOS (IndexedDB)
+// ════════════════════════════════════════════════
+let db;
+const DB_NAME = 'printai-db', DB_VER = 1, STORE = 'proyectos';
+
+function initDB(){
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains(STORE)){
+        const store = d.createObjectStore(STORE, { keyPath:'id' });
+        store.createIndex('fecha','fecha',{unique:false});
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbGet(id){ return new Promise((res,rej) => { const t=db.transaction(STORE,'readonly'); t.objectStore(STORE).get(id).onsuccess=e=>res(e.target.result); t.onerror=()=>rej(); }); }
+function dbGetAll(){ return new Promise((res,rej) => { const t=db.transaction(STORE,'readonly'); t.objectStore(STORE).getAll().onsuccess=e=>res(e.target.result); t.onerror=()=>rej(); }); }
+function dbPut(obj){ return new Promise((res,rej) => { const t=db.transaction(STORE,'readwrite'); t.objectStore(STORE).put(obj).onsuccess=e=>res(e.target.result); t.onerror=()=>rej(); }); }
+function dbDelete(id){ return new Promise((res,rej) => { const t=db.transaction(STORE,'readwrite'); t.objectStore(STORE).delete(id).onsuccess=()=>res(); t.onerror=()=>rej(); }); }
+
+// Estado actual de la app
+let currentProject = null;
+let projectToDelete = null;
+
+// Generar thumbnail del canvas
+function getThumbnail(){
+  const cv = document.getElementById('c3d');
+  try { return cv.toDataURL('image/jpeg', 0.6); } catch(e){ return null; }
+}
+
+// ════════════════════════════════════════════════
+//  MODALES
+// ════════════════════════════════════════════════
+function openModal(id){
+  document.getElementById(id).classList.add('show');
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('show');
+}
+// cerrar modal al click fuera
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if(e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+function openNewProjectModal(){
+  document.getElementById('newProjName').value = '';
+  openModal('modalNew');
+  setTimeout(() => document.getElementById('newProjName').focus(), 200);
+}
+document.getElementById('newProjName').addEventListener('keydown', e => {
+  if(e.key === 'Enter') createNewProject();
+});
+
+async function createNewProject(){
+  const name = document.getElementById('newProjName').value.trim();
+  const mat  = document.getElementById('newProjMat').value;
+  if(!name){ 
+    document.getElementById('newProjName').style.borderColor = 'var(--err)';
+    setTimeout(()=>document.getElementById('newProjName').style.borderColor='',1500);
+    return; 
+  }
+  const proj = {
+    id: Date.now().toString(),
+    nombre: name,
+    material: mat,
+    fecha: new Date().toISOString(),
+    modificado: new Date().toISOString(),
+    thumbnail: null,
+    angulo: 0,
+    pitch: 0.4,
+    stats: { tiempo:'—', filamento:'—', costo:'—', soportes:0 },
+    mensajes: [],
+    validacion: { score: 0, advertencias: [] }
+  };
+  await dbPut(proj);
+  currentProject = proj;
+  closeModal('modalNew');
+  renderProjectList();
+  showToast('ok','ti-circle-check',`Proyecto "${name}" creado`);
+  // abrir zona de imagen
+  setTimeout(() => document.getElementById('fup').click(), 400);
+}
+
+// ── GUARDAR ──
+function openSaveModal(){
+  const name = currentProject ? currentProject.nombre : 'mi-modelo';
+  document.getElementById('saveProjName').value = name;
+  openModal('modalSave');
+  setTimeout(() => document.getElementById('saveProjName').focus(), 200);
+}
+// también el botón del topbar llama a openModal('modalSave') pero redirigimos
+function openModal(id){
+  if(id === 'modalSave') { openSaveModal(); return; }
+  document.getElementById(id).classList.add('show');
+}
+
+async function doSaveProject(){
+  const name = document.getElementById('saveProjName').value.trim() || 'printai-proyecto';
+  
+  // guardar en IndexedDB también
+  if(currentProject){
+    currentProject.thumbnail = getThumbnail();
+    currentProject.modificado = new Date().toISOString();
+    currentProject.angulo = ang;
+    currentProject.pitch = pit;
+    currentProject.mensajes = getMensajes();
+    await dbPut(currentProject);
+    renderProjectList();
+  }
+
+  // exportar como archivo .printai (JSON)
+  const data = currentProject || {
+    id: Date.now().toString(),
+    nombre: name,
+    fecha: new Date().toISOString(),
+    modificado: new Date().toISOString(),
+    angulo: ang, pitch: pit,
+    mensajes: getMensajes(),
+    stats: { tiempo:'2h 14m', filamento:'18.4g', costo:'$420', soportes:3 }
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name.replace(/\s+/g,'-').toLowerCase() + '.printai';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  closeModal('modalSave');
+  showToast('ok','ti-device-floppy',`Guardado como "${a.download}"`);
+}
+
+// ── ABRIR ──
+async function openProject(){
+  // primero mostrar proyectos guardados en IndexedDB
+  const proyectos = await dbGetAll();
+  if(proyectos.length === 0){
+    // si no hay proyectos guardados, abrir archivo .printai
+    openFileProject();
+    return;
+  }
+  // abrir File System o preguntar
+  const choice = confirm(`Tenés ${proyectos.length} proyecto(s) guardado(s) localmente.
+
+OK = ver proyectos guardados
+Cancelar = abrir archivo .printai del ordenador`);
+  if(choice) showSavedProjects(proyectos);
+  else openFileProject();
+}
+
+function openFileProject(){
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.printai,application/json';
+  input.onchange = async e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    try {
+      const text = await file.text();
+      const proj = JSON.parse(text);
+      currentProject = proj;
+      // restaurar estado
+      if(proj.angulo !== undefined) ang = proj.angulo;
+      if(proj.pitch !== undefined) pit = proj.pitch;
+      if(proj.mensajes) restoreMensajes(proj.mensajes);
+      draw();
+      await dbPut(proj); // guardar en IndexedDB local
+      renderProjectList();
+      showToast('ok','ti-folder-open',`Proyecto "${proj.nombre || file.name}" cargado`);
+    } catch(err){
+      showToast('err','ti-x','Error al leer el archivo .printai');
+    }
+  };
+  input.click();
+}
+
+async function showSavedProjects(proyectos){
+  // ordenar por más reciente
+  proyectos.sort((a,b) => new Date(b.modificado) - new Date(a.modificado));
+  const names = proyectos.map((p,i) => `${i+1}. ${p.nombre} (${formatDate(p.modificado)})`).join('
+');
+  const idx = prompt(`Proyectos guardados:
+
+${names}
+
+Ingresá el número para cargar (o cancelar para abrir archivo):`);
+  if(idx === null) { openFileProject(); return; }
+  const i = parseInt(idx) - 1;
+  if(i >= 0 && i < proyectos.length){
+    const proj = proyectos[i];
+    currentProject = proj;
+    if(proj.angulo !== undefined) ang = proj.angulo;
+    if(proj.pitch !== undefined) pit = proj.pitch;
+    if(proj.mensajes) restoreMensajes(proj.mensajes);
+    draw();
+    renderProjectList();
+    showToast('ok','ti-folder-open',`"${proj.nombre}" cargado`);
+  }
+}
+
+// ── ELIMINAR ──
+function askDelete(id, nombre, e){
+  e.stopPropagation();
+  projectToDelete = id;
+  document.getElementById('modalDeleteMsg').textContent = `¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`;
+  document.getElementById('modalDelete').classList.add('show');
+}
+async function confirmDelete(){
+  if(!projectToDelete) return;
+  await dbDelete(projectToDelete);
+  if(currentProject && currentProject.id === projectToDelete) currentProject = null;
+  projectToDelete = null;
+  document.getElementById('modalDelete').classList.remove('show');
+  renderProjectList();
+  showToast('warn','ti-trash','Proyecto eliminado');
+}
+
+// ════════════════════════════════════════════════
+//  RENDER LISTA DE PROYECTOS
+// ════════════════════════════════════════════════
+function formatDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso), now = new Date();
+  const diff = (now - d) / 1000;
+  if(diff < 60) return 'Ahora mismo';
+  if(diff < 3600) return `Hace ${Math.floor(diff/60)}min`;
+  if(diff < 86400) return `Hace ${Math.floor(diff/3600)}h`;
+  if(diff < 604800) return `Hace ${Math.floor(diff/86400)} días`;
+  return d.toLocaleDateString('es-AR');
+}
+
+const ICONS_BY_MAT = {
+  'PLA':'ti-box','PLA+':'ti-box','PETG':'ti-cylinder','ABS':'ti-cube',
+  'ASA':'ti-cube','TPU':'ti-circle','Resina':'ti-droplet','Seda PLA':'ti-star'
+};
+const COLORS_BY_MAT = {
+  'PLA':'var(--acc2)','PLA+':'var(--acc2)','PETG':'var(--info)','ABS':'var(--warn)',
+  'ASA':'var(--warn)','TPU':'var(--ok)','Resina':'#f07','Seda PLA':'#ffd700'
+};
+
+async function renderProjectList(){
+  const container = document.querySelector('.sb-scroll');
+  if(!container) return;
+  
+  let proyectos = [];
+  try { proyectos = await dbGetAll(); } catch(e){ return; }
+  proyectos.sort((a,b) => new Date(b.modificado||b.fecha) - new Date(a.modificado||a.fecha));
+
+  // proyectos demo si está vacío
+  if(proyectos.length === 0){
+    container.innerHTML = `
+      <div style="padding:20px 10px;text-align:center">
+        <i class="ti ti-box" style="font-size:32px;color:var(--t3);display:block;margin-bottom:8px"></i>
+        <p style="font-size:12px;color:var(--t3);line-height:1.5">Todavía no tenés proyectos.<br>Subí una imagen para empezar.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = proyectos.map(p => {
+    const ico = ICONS_BY_MAT[p.material] || 'ti-box';
+    const col = COLORS_BY_MAT[p.material] || 'var(--acc2)';
+    const isActive = currentProject && currentProject.id === p.id;
+    const dotColor = p.validacion && p.validacion.score > 80 ? 'var(--ok)' : p.validacion && p.validacion.score > 50 ? 'var(--warn)' : 'var(--err)';
+    return `
+      <div class="proj${isActive?' on':''}" onclick="loadProject('${p.id}')">
+        ${p.thumbnail 
+          ? `<div class="proj-ico" style="overflow:hidden;padding:0"><img src="${p.thumbnail}" style="width:100%;height:100%;object-fit:cover;border-radius:7px"></div>`
+          : `<div class="proj-ico"><i class="ti ${ico}" style="color:${col}"></i></div>`
+        }
+        <div style="min-width:0;flex:1">
+          <div class="proj-name">${p.nombre}</div>
+          <div class="proj-time">${formatDate(p.modificado||p.fecha)} · ${p.material||'PLA'}</div>
+        </div>
+        <div class="proj-dot" style="background:${dotColor}"></div>
+        <button class="proj-menu" onclick="askDelete('${p.id}','${p.nombre.replace(/'/g,"\'")}',event)" title="Eliminar">
+          <i class="ti ti-dots-vertical"></i>
+        </button>
+      </div>`;
+  }).join('');
+}
+
+async function loadProject(id){
+  const proj = await dbGet(id);
+  if(!proj) return;
+  currentProject = proj;
+  if(proj.angulo !== undefined) ang = proj.angulo;
+  if(proj.pitch !== undefined) pit = proj.pitch;
+  if(proj.mensajes) restoreMensajes(proj.mensajes);
+  draw();
+  renderProjectList();
+  showToast('ok','ti-folder','Proyecto cargado');
+}
+
+// ════════════════════════════════════════════════
+//  MENSAJES DEL CHAT
+// ════════════════════════════════════════════════
+function getMensajes(){
+  const msgs = document.querySelectorAll('#msgs .msg');
+  return Array.from(msgs).map(m => ({
+    tipo: m.classList.contains('me') ? 'me' : 'ai',
+    texto: m.querySelector('.mfrom') ? m.innerHTML.replace(m.querySelector('.mfrom').outerHTML,'').trim() : m.textContent
+  }));
+}
+
+function restoreMensajes(mensajes){
+  const container = document.getElementById('msgs');
+  container.innerHTML = '';
+  mensajes.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'msg ' + m.tipo;
+    div.innerHTML = `<div class="mfrom">${m.tipo==='me'?'Vos':'PrintAI'}</div>${m.texto}`;
+    container.appendChild(div);
+  });
+  container.scrollTop = 9999;
+}
+
+// ════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════
+let toastTimer;
+function showToast(type, icon, msg){
+  const toast = document.getElementById('toast');
+  const ico   = document.getElementById('toast-icon');
+  const txt   = document.getElementById('toast-msg');
+  toast.className = `toast ${type}`;
+  ico.className   = `ti ${icon}`;
+  txt.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// ── AUTOSAVE cada 2 minutos ──
+setInterval(async () => {
+  if(!currentProject || !db) return;
+  currentProject.thumbnail = getThumbnail();
+  currentProject.modificado = new Date().toISOString();
+  currentProject.angulo = ang;
+  currentProject.pitch = pit;
+  currentProject.mensajes = getMensajes();
+  await dbPut(currentProject);
+  renderProjectList();
+  showToast('ok','ti-device-floppy','Guardado automático');
+}, 120000);
+
+// ── INIT ──
+// Mostrar URL actual en el modal de ayuda
+function updateAppUrl() {
+  const el = document.getElementById('appUrl');
+  if (el) el.textContent = window.location.href;
+}
+function copyAppUrl() {
+  navigator.clipboard.writeText(window.location.href)
+    .then(() => showToast('ok','ti-copy','Link copiado al portapapeles'))
+    .catch(() => {
+      const el = document.getElementById('appUrl');
+      if(el) { const r=document.createRange(); r.selectNode(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); document.execCommand('copy'); showToast('ok','ti-copy','Link copiado'); }
+    });
+}
+updateAppUrl();
+
+initDB().then(() => {
+  renderProjectList();
+  showToast('ok','ti-bolt','PrintAI Studio lista');
+});
+
+// ── ATAJOS DE TECLADO ──
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && e.key==='s'){
+    e.preventDefault();
+    openModal('modalSave');
+  }
+  if((e.ctrlKey||e.metaKey) && e.key==='o'){
+    e.preventDefault();
+    openProject();
+  }
+  if((e.ctrlKey||e.metaKey) && e.key==='n'){
+    e.preventDefault();
+    openNewProjectModal();
+  }
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
+  }
+});
+</script>
+
+</body>
+</html>

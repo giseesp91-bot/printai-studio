@@ -1,0 +1,17 @@
+{
+  "name": "PrintAI Studio",
+  "short_name": "PrintAI",
+  "description": "Generación y optimización de modelos 3D con IA",
+  "start_url": "./printai-studio.html",
+  "display": "standalone",
+  "background_color": "#080a0e",
+  "theme_color": "#080a0e",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%235b6cf9'/><text y='140' x='96' text-anchor='middle' font-size='120' font-family='sans-serif'>⬡</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
