@@ -803,7 +803,7 @@ select.prsel{
         <div class="qc" onclick="sendQ('Estilo cartoon')">Cartoon</div>
         <div class="qc" onclick="sendQ('Vaciar por dentro (hollow)')">Hollow</div>
         <div class="qc" onclick="sendQ('Detectar errores y corregir')">Auto-fix</div>
-        <div class="qc" onclick="sendQ('Optimizar orientación')">Orientar</div>
+        <div class="qc" onclick="sendQ('Optimizar orientacion')">Orientar</div>
       </div>
       <div class="msgs" id="msgs" style="flex:1;min-height:0;">
         <div class="msg ai">
@@ -816,7 +816,7 @@ select.prsel{
         </div>
         <div class="msg ai">
           <div class="mfrom">PrintAI</div>
-          ✓ Paredes reforzadas a 1.6mm mínimo.<br>✓ Voladizo reducido a 28° — ya no necesita soporte.<br>✓ Escala aumentada 20% (103 × 89 × 48mm).<br><br>El modelo es ahora completamente imprimible. Puntuación: 88/100.
+          ✓ Paredes reforzadas a 1.6mm minimo.<br>✓ Voladizo reducido a 28° — ya no necesita soporte.<br>✓ Escala aumentada 20% (103 × 89 × 48mm).<br><br>El modelo es ahora completamente imprimible. Puntuación: 88/100.
         </div>
       </div>
       <div class="cinwrap">
@@ -843,7 +843,7 @@ select.prsel{
       </div>
 
       <div class="sec">Advertencias activas</div>
-      <div class="witem w-w"><i class="ti ti-alert-triangle"></i>Pared de 0.8mm — mínimo recomendado 1.2mm</div>
+      <div class="witem w-w"><i class="ti ti-alert-triangle"></i>Pared de 0.8mm — minimo recomendado 1.2mm</div>
       <div class="witem w-w"><i class="ti ti-alert-triangle"></i>Voladizo 35° — cerca del límite sin soporte</div>
       <div class="witem w-ok"><i class="ti ti-circle-check"></i>Adhesión a la cama: excelente (base plana)</div>
       <div class="witem w-ok"><i class="ti ti-circle-check"></i>Sin piezas flotantes detectadas</div>
@@ -853,7 +853,7 @@ select.prsel{
       <div class="sec">Chequeo técnico de malla</div>
       <div class="chk"><div class="chl"><i class="ti ti-topology-ring"></i>Manifold (cerrado)</div><div class="badge bok">OK</div></div>
       <div class="chk"><div class="chl"><i class="ti ti-vector-triangle"></i>Normales correctas</div><div class="badge bok">OK</div></div>
-      <div class="chk"><div class="chl"><i class="ti ti-dimensions"></i>Grosor mínimo</div><div class="badge bwarn">0.8mm</div></div>
+      <div class="chk"><div class="chl"><i class="ti ti-dimensions"></i>Grosor minimo</div><div class="badge bwarn">0.8mm</div></div>
       <div class="chk"><div class="chl"><i class="ti ti-arrows-transfer-up"></i>Ángulo voladizos</div><div class="badge bwarn">35°</div></div>
       <div class="chk"><div class="chl"><i class="ti ti-box-multiple"></i>Cuerpos sólidos</div><div class="badge bok">1</div></div>
       <div class="chk"><div class="chl"><i class="ti ti-stairs-up"></i>Estabilidad base</div><div class="badge bok">Alta</div></div>
@@ -2022,7 +2022,9 @@ function toggleRender(type, el) {
 // ── RESIZE ──
 function onResize() {
   const container = document.getElementById('viewport3d');
+  if (!container || !renderer) return;
   const W = container.offsetWidth, H = container.offsetHeight;
+  if (W === 0 || H === 0) return;
   renderer.setSize(W, H);
   camera.aspect = W / H;
   camera.updateProjectionMatrix();
@@ -2030,6 +2032,7 @@ function onResize() {
     cv2d.width = W; cv2d.height = H;
     draw2D(curMode, W, H);
   }
+  if (typeof checkMobileLayout === 'function') checkMobileLayout();
 }
 
 // ── THUMBNAIL para guardar proyecto ──
@@ -2105,10 +2108,10 @@ window.addEventListener('load', () => {
 function buildSystemPrompt() {
   const stats = calcModelStats();
   let ctx = `Sos PrintAI, un asistente especializado en impresión 3D integrado en PrintAI Studio.
-Ayudás al usuario a modificar, optimizar y validar modelos 3D para impresión.
-Respondé siempre en español rioplatense, de forma clara y concisa (máximo 3 párrafos).
+Ayudas al usuario a modificar, optimizar y validar modelos 3D para impresión.
+Responde siempre en espanol rioplatense, de forma clara y concisa (máximo 3 parrafos).
 Cuando el usuario pida cambios al modelo, describí exactamente qué harías y cómo afecta la imprimibilidad.
-Siempre considerá: grosor mínimo de paredes (1.2mm), voladizos máximos (45°), adhesión a la cama, soportes necesarios.`;
+Siempre considera: grosor minimo de paredes (1.2mm), voladizos maximos (45°), adhesión a la cama, soportes necesarios.`;
 
   if (stats) {
     ctx += `
@@ -2124,9 +2127,7 @@ MODELO ACTUAL CARGADO:
 - Puntuación imprimibilidad: ${stats.score}/100
 - Pared mínima estimada: ${stats.minWall}mm`;
   } else {
-    ctx += '
-
-No hay modelo cargado actualmente. Podés pedirle al usuario que suba un STL u OBJ.';
+    ctx += '\nNo hay modelo cargado actualmente. Pedi al usuario que suba un STL u OBJ.';
   }
   return ctx;
 }
@@ -2617,7 +2618,7 @@ function calcModelStats() {
   const aspectRatio  = size.y / Math.max(size.x, size.z);
   const riskPct      = Math.min(90, Math.round(aspectRatio * 40 + (overhangs > 2 ? 20 : 0)));
 
-  // grosor mínimo estimado
+  // grosor minimo estimado
   const minWall      = Math.max(0.4, Math.min(size.x, size.z) * 0.03).toFixed(1);
 
   return {
@@ -2690,7 +2691,7 @@ function refreshStats() {
   if (warnList) {
     const warns = [];
     if (parseFloat(s.minWall) < 1.2)
-      warns.push({ c:'w-w', ico:'ti-alert-triangle', txt:`Pared estimada ${s.minWall}mm — mínimo recomendado 1.2mm` });
+      warns.push({ c:'w-w', ico:'ti-alert-triangle', txt:`Pared estimada ${s.minWall}mm — minimo recomendado 1.2mm` });
     if (s.overhangs > 2)
       warns.push({ c:'w-w', ico:'ti-alert-triangle', txt:`${s.overhangs} zonas de voladizo detectadas` });
     if (s.riskPct > 60)
@@ -2800,7 +2801,7 @@ function validateMesh() {
   // Normales
   checks.push({ label:'Normales', badge:'bok', val:'OK' });
 
-  // Grosor mínimo
+  // Grosor minimo
   const wallOk = parseFloat(minWallMM) >= 1.2;
   if (!wallOk) {
     warnings.push({ c:'w-w', ico:'ti-alert-triangle', txt:`Arista mínima ${minWallMM}mm — paredes posiblemente muy finas (mín. 1.2mm)` });
@@ -2834,7 +2835,7 @@ function validateMesh() {
 
   // Agregar OK genéricos
   warnings.push({ c:'w-ok', ico:'ti-circle-check', txt:`Malla cargada: ${Math.round(totalTris).toLocaleString()} triángulos · ${Math.round(totalVerts).toLocaleString()} vértices` });
-  warnings.push({ c:'w-ok', ico:'ti-circle-check', txt:`Adhesión a la cama: ${baseOk ? 'correcta' : 'revisar orientación'}` });
+  warnings.push({ c:'w-ok', ico:'ti-circle-check', txt:`Adhesión a la cama: ${baseOk ? 'correcta' : 'revisar orientacion'}` });
 
   // ── Actualizar UI del panel Validar ──
   // Score
@@ -2980,7 +2981,7 @@ function openSaveModal(){
   openModal('modalSave');
   setTimeout(() => document.getElementById('saveProjName').focus(), 200);
 }
-// también el botón del topbar llama a openModal('modalSave') pero redirigimos
+// tambien el botón del topbar llama a openModal('modalSave') pero redirigimos
 function openModal(id){
   if(id === 'modalSave') { openSaveModal(); return; }
   document.getElementById(id).classList.add('show');
@@ -2989,7 +2990,7 @@ function openModal(id){
 async function doSaveProject(){
   const name = document.getElementById('saveProjName').value.trim() || 'printai-proyecto';
   
-  // guardar en IndexedDB también
+  // guardar en IndexedDB tambien
   if(currentProject){
     currentProject.thumbnail = getThumbnail();
     currentProject.modificado = new Date().toISOString();
@@ -3070,13 +3071,8 @@ function openFileProject(){
 async function showSavedProjects(proyectos){
   // ordenar por más reciente
   proyectos.sort((a,b) => new Date(b.modificado) - new Date(a.modificado));
-  const names = proyectos.map((p,i) => `${i+1}. ${p.nombre} (${formatDate(p.modificado)})`).join('
-');
-  const idx = prompt(`Proyectos guardados:
-
-${names}
-
-Ingresá el número para cargar (o cancelar para abrir archivo):`);
+  const names = proyectos.map((p,i) => `${i+1}. ${p.nombre} (${formatDate(p.modificado)})`).join('\n');
+  const idx = prompt('Proyectos guardados:\n\n' + names + '\n\nIngresa el numero para cargar (o cancelar para abrir archivo).');
   if(idx === null) { openFileProject(); return; }
   const i = parseInt(idx) - 1;
   if(i >= 0 && i < proyectos.length){
@@ -3093,9 +3089,21 @@ Ingresá el número para cargar (o cancelar para abrir archivo):`);
 
 // ── ELIMINAR ──
 function askDelete(id, nombre, e){
-  e.stopPropagation();
+  if (typeof id === 'object') {
+    // llamado desde data-attribute (btn)
+    const btn = id;
+    if (e && e.stopPropagation) e.stopPropagation();
+    else if (btn.tagName) btn.closest && btn.closest('.proj') && btn.closest('.proj').click;
+    const realId     = btn.getAttribute('data-id') || btn.dataset.id;
+    const realNombre = btn.getAttribute('data-nombre') || 'este proyecto';
+    projectToDelete  = realId;
+    document.getElementById('modalDeleteMsg').textContent = 'Eliminar "' + realNombre + '"? Esta accion no se puede deshacer.';
+    document.getElementById('modalDelete').classList.add('show');
+    return;
+  }
+  if (e && e.stopPropagation) e.stopPropagation();
   projectToDelete = id;
-  document.getElementById('modalDeleteMsg').textContent = `¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`;
+  document.getElementById('modalDeleteMsg').textContent = 'Eliminar "' + nombre + '"? Esta accion no se puede deshacer.';
   document.getElementById('modalDelete').classList.add('show');
 }
 async function confirmDelete(){
@@ -3165,7 +3173,7 @@ async function renderProjectList(){
           <div class="proj-time">${formatDate(p.modificado||p.fecha)} · ${p.material||'PLA'}</div>
         </div>
         <div class="proj-dot" style="background:${dotColor}"></div>
-        <button class="proj-menu" onclick="askDelete('${p.id}','${p.nombre.replace(/'/g,"\'")}',event)" title="Eliminar">
+        <button class="proj-menu" onclick="askDelete(this,null,event)" data-id="${p.id}" data-nombre="${p.nombre}" title="Eliminar">
           <i class="ti ti-dots-vertical"></i>
         </button>
       </div>`;
@@ -3203,7 +3211,7 @@ function getMensajes(){
 function restoreMensajes(mensajes){
   const container = document.getElementById('msgs');
   container.innerHTML = '';
-  // restaurar historial en chatHistory también
+  // restaurar historial en chatHistory tambien
   chatHistory = [];
   mensajes.forEach(m => {
     const div = document.createElement('div');
@@ -3323,12 +3331,6 @@ function checkMobileLayout(){
 }
 window.addEventListener('resize', ()=>{
   checkMobileLayout();
-  if(renderer && document.getElementById('viewport3d')){
-    const vp = document.getElementById('viewport3d');
-    renderer.setSize(vp.offsetWidth, vp.offsetHeight);
-    camera.aspect = vp.offsetWidth / vp.offsetHeight;
-    camera.updateProjectionMatrix();
-  }
 });
 window.addEventListener('load', checkMobileLayout);
 </script>
