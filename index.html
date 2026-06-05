@@ -740,8 +740,8 @@ select.prsel{
 </head>
 <body>
 
-<div class="app">
 
+<div class="app">
   <!-- TOPBAR -->
   <div class="topbar">
     <a class="logo" href="#">
@@ -750,31 +750,26 @@ select.prsel{
     </a>
     <button class="tbtn" id="menuToggle" onclick="toggleSidebar()" style="display:none;padding:6px 10px"><i class="ti ti-menu-2"></i></button>
     <div class="top-tabs">
-      <button class="tt on" onclick="activeTT(this)"><i class="ti ti-layout-dashboard"></i>Workspace</button>
       <button class="tt on" onclick="switchTab('workspace',this)"><i class="ti ti-layout-dashboard"></i>Workspace</button>
       <button class="tt" onclick="switchTab('biblioteca',this)"><i class="ti ti-books"></i>Biblioteca</button>
       <button class="tt" onclick="switchTab('historial',this)"><i class="ti ti-clock-hour-3"></i>Historial</button>
       <button class="tt" onclick="switchTab('config',this)"><i class="ti ti-settings"></i>Config</button>
+    </div>
     <div class="top-right">
-      <button class="tbtn" onclick="openModal('modalHelp')" title="Ayuda de instalación">
-        <i class="ti ti-help"></i>Cómo instalar
-      </button>
-      <div class="ia-badge"><div class="ia-dot"></div>IA activa — GPT-4o</div>
-      <button id="btn-undo" class="tbtn" onclick="undo()" title="Deshacer (Ctrl+Z)" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-back-up"></i></button>
-      <button id="btn-redo" class="tbtn" onclick="redo()" title="Rehacer (Ctrl+Y)" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-forward-up"></i></button>
-      <button class="tbtn" onclick="resetModel()" title="Resetear modelo al estado original"><i class="ti ti-refresh"></i></button>
-    <button class="tbtn" onclick="openNewProjectModal()"><i class="ti ti-plus"></i>Nuevo</button>
+      <button class="tbtn" onclick="openModal('modalHelp')" title="Cómo instalar"><i class="ti ti-help"></i>Cómo instalar</button>
+      <div class="ia-badge"><div class="ia-dot"></div>IA activa</div>
+      <button id="btn-undo" class="tbtn" onclick="undo()" title="Deshacer Ctrl+Z" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-back-up"></i></button>
+      <button id="btn-redo" class="tbtn" onclick="redo()" title="Rehacer Ctrl+Y" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-forward-up"></i></button>
+      <button class="tbtn" onclick="resetModel()" title="Resetear modelo"><i class="ti ti-refresh"></i></button>
+      <button class="tbtn" onclick="openNewProjectModal()"><i class="ti ti-plus"></i>Nuevo</button>
       <button class="tbtn" onclick="openProject()"><i class="ti ti-folder-open"></i>Abrir</button>
       <button class="tbtn" onclick="openModal('modalSave')"><i class="ti ti-device-floppy"></i>Guardar</button>
       <button class="tbtn primary" onclick="showExport()"><i class="ti ti-printer"></i>Exportar</button>
-      <button class="tbtn mobile-panel-btn" id="panelToggle" onclick="toggleRpanel()"
-        style="display:none;padding:6px 10px">
-        <i class="ti ti-layout-sidebar-right"></i>
-      </button>
+      <button class="tbtn" id="panelToggle" onclick="toggleRpanel()" style="display:none;padding:6px 10px"><i class="ti ti-layout-sidebar-right"></i></button>
     </div>
   </div>
 
-  <!-- ICON BAR -->
+  <!-- ICONBAR -->
   <div class="iconbar">
 <div class="ib on" data-tip="Vista libre" onclick="ibAction('free',this)"><i class="ti ti-vector-bezier"></i></div>
 <div class="ib" data-tip="Seleccionar modelo" onclick="ibAction('select',this)"><i class="ti ti-pointer"></i></div>
@@ -1122,6 +1117,9 @@ select.prsel{
   <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileDrawers()"></div>
 
   <!-- VISTA BIBLIOTECA -->
+
+  <!-- backdrop drawers móvil -->
+
   <div id="view-biblioteca" style="display:none;position:fixed;inset:52px 0 0 0;background:var(--bg);z-index:50;overflow-y:auto;padding:32px;">
     <div style="max-width:900px;margin:0 auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
