@@ -174,11 +174,24 @@ html,body{
 }
 .ib[data-tip]:hover::after{
   content:attr(data-tip);
-  position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);
-  background:var(--bg4);border:1px solid var(--b2);
-  padding:4px 10px;border-radius:6px;font-size:11px;color:var(--t1);
-  white-space:nowrap;font-family:var(--fnt);pointer-events:none;z-index:100;
+  position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);
+  background:var(--bg4);border:1px solid var(--b3);
+  padding:5px 12px;border-radius:var(--r);font-size:12px;color:var(--t1);
+  white-space:nowrap;font-family:'Inter',var(--fnt);pointer-events:none;z-index:9999;
+  box-shadow:var(--shadow);
 }
+/* Tooltips para TODOS los botones con title o data-tip */
+[title]:not([title=""]):hover::after{
+  content:attr(title);
+  position:fixed;
+  background:var(--bg4);border:1px solid var(--b3);
+  padding:5px 12px;border-radius:var(--r);font-size:12px;color:var(--t1);
+  white-space:nowrap;font-family:'Inter',var(--fnt);pointer-events:none;z-index:9999;
+  box-shadow:var(--shadow);
+  top:var(--tip-y,40px);left:var(--tip-x,0);
+  transform:translateX(-50%);
+}
+[title]:not([title=""]):hover{position:relative;}
 .ib-sep{width:30px;height:1px;background:var(--b1);margin:6px 0}
 
 /* ── SIDEBAR ── */
@@ -761,10 +774,10 @@ select.prsel{
       <button id="btn-undo" class="tbtn" onclick="undo()" title="Deshacer Ctrl+Z" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-back-up"></i></button>
       <button id="btn-redo" class="tbtn" onclick="redo()" title="Rehacer Ctrl+Y" style="opacity:.35;padding:6px 10px"><i class="ti ti-arrow-forward-up"></i></button>
       <button class="tbtn" onclick="resetModel()" title="Resetear modelo"><i class="ti ti-refresh"></i></button>
-      <button class="tbtn" onclick="openNewProjectModal()"><i class="ti ti-plus"></i>Nuevo</button>
-      <button class="tbtn" onclick="openProject()"><i class="ti ti-folder-open"></i>Abrir</button>
-      <button class="tbtn" onclick="openModal('modalSave')"><i class="ti ti-device-floppy"></i>Guardar</button>
-      <button class="tbtn primary" onclick="showExport()"><i class="ti ti-printer"></i>Exportar</button>
+      <button class="tbtn" onclick="openNewProjectModal()" title="Nuevo proyecto (Ctrl+N)"><i class="ti ti-plus"></i>Nuevo</button>
+      <button class="tbtn" onclick="openProject()" title="Abrir proyecto guardado (Ctrl+O)"><i class="ti ti-folder-open"></i>Abrir</button>
+      <button class="tbtn" onclick="openModal('modalSave')" title="Guardar proyecto (Ctrl+S)"><i class="ti ti-device-floppy"></i>Guardar</button>
+      <button class="tbtn primary" onclick="showExport()" title="Exportar STL / OBJ / 3MF"><i class="ti ti-printer"></i>Exportar</button>
       <button class="tbtn" id="panelToggle" onclick="toggleRpanel()" style="display:none;padding:6px 10px"><i class="ti ti-layout-sidebar-right"></i></button>
     </div>
   </div>
@@ -791,7 +804,7 @@ select.prsel{
   <div class="sidebar">
     <div class="sb-head">
       <div class="sb-label">Nuevo proyecto</div>
-      <div class="upload-zone" id="uploadZone" onclick="openNewProjectModal()">
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fup').click()">
         <input type="file" id="fup" style="display:none" accept="image/*,.stl,.obj,.3mf" onchange="handleFileUpload(this)">
         <i class="ti ti-upload"></i>
         <p>Subí imagen o modelo 3D</p>
@@ -1260,16 +1273,20 @@ function ibAction(action, el) {
 
   // botones de acción directa (no cambian herramienta activa)
   if(action === 'wire'){
-    const btn = document.getElementById('btn-solido');
-    if(btn) btn.click();
     el.classList.toggle('on');
-    showToast('ok','ti-vector-triangle', el.classList.contains('on') ? 'Wireframe activado' : 'Vista sólida');
+    const isOn = el.classList.contains('on');
+    if (modelMesh) {
+      modelMesh.traverse(m => {
+        if (m.isMesh) { m.material.wireframe = isOn; m.material.needsUpdate = true; }
+      });
+    }
+    showToast('ok','ti-vector-triangle', isOn ? 'Wireframe activado' : 'Vista sólida restaurada');
   }
   else if(action === 'grid'){
-    const btn = document.getElementById('btn-grid');
-    if(btn) btn.click();
     el.classList.toggle('on');
-    showToast('ok','ti-grid', el.classList.contains('on') ? 'Grilla ocultada' : 'Grilla visible');
+    const isOn = el.classList.contains('on');
+    if (gridHelper) gridHelper.visible = !isOn; // grid visible por defecto, toggle oculta
+    showToast('ok','ti-grid', isOn ? 'Grilla oculta' : 'Grilla visible');
   }
   else if(action === 'dims'){
     if(!modelMesh){ showToast('warn','ti-alert-triangle','No hay modelo cargado'); return; }
@@ -1746,6 +1763,10 @@ function loadGeometry(geo, filename) {
   // ocultar pantalla de bienvenida
   const wo = document.getElementById('welcomeOverlay');
   if (wo) wo.style.display = 'none';
+  // resetear estado de botones toggle del viewport
+  document.querySelectorAll('.vpbtn.on').forEach(b => b.classList.remove('on'));
+  document.getElementById('btn-solido') && document.getElementById('btn-solido').classList.add('on');
+  if (gridHelper) gridHelper.visible = true;
 
   showToast('ok', 'ti-3d-cube-sphere', `Modelo "${filename}" cargado`);
   setTimeout(() => refreshStats(), 300);
@@ -1754,6 +1775,19 @@ function loadGeometry(geo, filename) {
 async function handleFileUpload(input) {
   const file = input.files[0];
   if (!file) return;
+  // Si no hay proyecto activo, crear uno primero
+  if (!currentProject) {
+    pendingFile = file;
+    openNewProjectModal();
+    // Pre-llenar el nombre con el nombre del archivo
+    setTimeout(() => {
+      const inp = document.getElementById('newProjName');
+      if (inp && !inp.value) {
+        inp.value = file.name.replace(/\.(stl|obj|3mf)$/i, '').replace(/[-_]/g, ' ');
+      }
+    }, 200);
+    return;
+  }
   const ext = file.name.split('.').pop().toLowerCase();
   const gen = document.getElementById('genOverlay');
   const sub = document.getElementById('genSub');
@@ -2337,26 +2371,52 @@ function drawPath2D(W, H) {
 // ── TOGGLE OPCIONES RENDER ──
 function toggleRender(type, el) {
   el.classList.toggle('on');
-  if (!modelMesh) return;
+  const isOn = el.classList.contains('on');
+
   if (type === 'wire') {
-    const isWire = !el.classList.contains('on');
-    modelMesh.traverse(m => {
-      if (m.isMesh) {
-        m.material.wireframe = isWire;
-        el.innerHTML = isWire
-          ? '<i class="ti ti-vector-triangle"></i>Wireframe'
-          : '<i class="ti ti-vector-triangle"></i>Sólido';
-      }
-    });
+    // ON = wireframe, OFF = sólido
+    if (modelMesh) {
+      modelMesh.traverse(m => {
+        if (m.isMesh) {
+          m.material.wireframe = isOn;
+          m.material.needsUpdate = true;
+        }
+      });
+    }
+    el.querySelector('i').className = isOn
+      ? 'ti ti-vector-triangle'
+      : 'ti ti-vector-triangle';
+    el.childNodes[1] && (el.childNodes[1].textContent = isOn ? 'Wireframe' : 'Sólido');
   }
+
   if (type === 'grid') {
-    gridHelper.visible = el.classList.contains('on');
+    if (gridHelper) gridHelper.visible = isOn;
   }
+
   if (type === 'shading') {
-    const flat = !el.classList.contains('on');
-    modelMesh.traverse(m => {
-      if (m.isMesh) m.material.flatShading = flat;
-    });
+    if (modelMesh) {
+      modelMesh.traverse(m => {
+        if (m.isMesh) {
+          m.material.flatShading = isOn;
+          m.material.needsUpdate = true;
+        }
+      });
+    }
+  }
+
+  if (type === 'bounds') {
+    // Mostrar/ocultar bounding box
+    const existing = scene && scene.getObjectByName('boundingBox');
+    if (isOn && modelMesh && scene) {
+      if (!existing) {
+        const box3 = new THREE.Box3().setFromObject(modelMesh);
+        const boxHelper = new THREE.Box3Helper(box3, 0x6366f1);
+        boxHelper.name = 'boundingBox';
+        scene.add(boxHelper);
+      }
+    } else {
+      if (existing && scene) scene.remove(existing);
+    }
   }
 }
 
@@ -3308,8 +3368,12 @@ async function createNewProject(){
   closeModal('modalNew');
   renderProjectList();
   showToast('ok','ti-circle-check',`Proyecto "${name}" creado`);
-  // abrir zona de imagen
-  setTimeout(() => document.getElementById('fup').click(), 400);
+  if (pendingFile) {
+    handleFileUpload({ files: [pendingFile] });
+    pendingFile = null;
+  } else {
+    setTimeout(() => document.getElementById('fup').click(), 300);
+  }
 }
 
 // ── GUARDAR ──
@@ -3653,6 +3717,7 @@ const MATERIALS = {
   silk:  { name:'Seda PLA', density:1.24, nozzle:215, bed:60,  color:0xffd700 },
 };
 let currentMaterial = 'pla';
+let pendingFile = null; // archivo esperando a que se cree un proyecto
 
 function onMaterialChange(val) {
   currentMaterial = val;
@@ -4152,6 +4217,54 @@ async function simulatedResponse(txt, div, container) {
   container.scrollTop = 9999;
 }
 
+
+// ════════════════════════════════════════════════
+//  TOOLTIPS GLOBALES
+// ════════════════════════════════════════════════
+(function(){
+  const tip = document.createElement('div');
+  tip.id = 'globalTip';
+  tip.style.cssText = `
+    position:fixed;z-index:9999;pointer-events:none;
+    background:var(--bg4);border:1px solid var(--b3);
+    padding:5px 12px;border-radius:10px;font-size:12px;
+    color:var(--t1);font-family:'Inter',sans-serif;
+    box-shadow:0 4px 12px rgba(0,0,0,.5);
+    transition:opacity .1s;opacity:0;white-space:nowrap;
+    max-width:220px;white-space:normal;text-align:center;
+  `;
+  document.body.appendChild(tip);
+
+  function showTip(el, text) {
+    if (!text) return;
+    tip.textContent = text;
+    tip.style.opacity = '1';
+    positionTip(el);
+  }
+  function hideTip() { tip.style.opacity = '0'; }
+  function positionTip(el) {
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const by = r.bottom + 8;
+    // ajustar si se sale de la pantalla
+    const tw = tip.offsetWidth || 120;
+    const left = Math.max(8, Math.min(window.innerWidth - tw - 8, cx - tw/2));
+    tip.style.left = left + 'px';
+    tip.style.top  = by + 'px';
+  }
+
+  document.addEventListener('mouseover', e => {
+    const el = e.target.closest('[title],[data-tip]');
+    if (!el) return;
+    const text = el.getAttribute('title') || el.getAttribute('data-tip');
+    if (text) showTip(el, text);
+  });
+  document.addEventListener('mouseout', e => {
+    if (!e.relatedTarget?.closest('[title],[data-tip]')) hideTip();
+  });
+  document.addEventListener('click', hideTip);
+  document.addEventListener('scroll', hideTip, true);
+})();
 
 // ════════════════════════════════════════════════
 //  NAVEGACIÓN MÓVIL — DRAWERS
